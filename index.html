@@ -98,60 +98,63 @@
         </svg>
         <div>
           <h1>Marina Row</h1>
-          <p>Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.</p>
+          <p data-i18n="brandSub">Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.</p>
         </div>
       </div>
 
       <div class="section">
-        <h2>Telemetry</h2>
+        <h2 data-i18n="telemetry">Telemetry</h2>
         <div class="stats">
-          <article class="stat"><div class="stat-label">Boat speed</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
-          <article class="stat"><div class="stat-label">Bridge angle</div><div class="stat-value" id="angleValue">0°</div></article>
-          <article class="stat"><div class="stat-label">Park distance</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
-          <article class="stat"><div class="stat-label">River assist</div><div class="stat-value" id="flowValue">Off</div></article>
+          <article class="stat"><div class="stat-label" data-i18n="boatSpeed">Boat speed</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
+          <article class="stat"><div class="stat-label" data-i18n="bridgeAngle">Bridge angle</div><div class="stat-value" id="angleValue">0°</div></article>
+          <article class="stat"><div class="stat-label" data-i18n="parkDist">Park distance</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
+          <article class="stat"><div class="stat-label" data-i18n="riverAssist">River assist</div><div class="stat-value" id="flowValue">Off</div></article>
         </div>
       </div>
 
       <div class="section controls">
-        <h2>Controls</h2>
-        <div class="control-row"><span>Both oars forward</span><span class="keycap">W</span></div>
-        <div class="control-row"><span>Both oars backwards</span><span class="keycap">S</span></div>
-        <div class="control-row"><span>Left oar forward</span><span class="keycap">A</span></div>
-        <div class="control-row"><span>Right oar forward</span><span class="keycap">D</span></div>
-        <div class="control-row"><span>Left oar back / hold</span><span class="keycap">Z</span></div>
-        <div class="control-row"><span>Right oar back / hold</span><span class="keycap">C</span></div>
+        <h2 data-i18n="controls">Controls</h2>
+        <div class="control-row"><span data-i18n="ctrl_w">Both oars forward</span><span class="keycap">W</span></div>
+        <div class="control-row"><span data-i18n="ctrl_s">Both oars backwards</span><span class="keycap">S</span></div>
+        <div class="control-row"><span data-i18n="ctrl_a">Left oar forward</span><span class="keycap">A</span></div>
+        <div class="control-row"><span data-i18n="ctrl_d">Right oar forward</span><span class="keycap">D</span></div>
+        <div class="control-row"><span data-i18n="ctrl_z">Left oar back / hold</span><span class="keycap">Z</span></div>
+        <div class="control-row"><span data-i18n="ctrl_c">Right oar back / hold</span><span class="keycap">C</span></div>
       </div>
 
       <div class="section">
-        <h2>Water settings</h2>
-        <label class="toggle-row" for="flowToggle"><span>Enable river flow</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
-        <label class="toggle-row" for="themeToggle"><span>Dark mode</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
+        <h2 data-i18n="waterSettings">Water settings</h2>
+        <label class="toggle-row" for="flowToggle"><span data-i18n="enableFlow">Enable river flow</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
+        <label class="toggle-row" for="sensitivityToggle"><span data-i18n="lowSens">Low turn sensitivity</span><input class="toggle" id="sensitivityToggle" type="checkbox" aria-label="Low turn sensitivity" /></label>
+        <label class="toggle-row" for="themeToggle"><span data-i18n="darkMode">Dark mode</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
+        <div class="toggle-row"><span data-i18n="language">Language</span><button class="btn btn-secondary" id="langToggle" style="min-height:36px;padding:.4rem .9rem;font-size:.85rem;font-weight:700;">🇵🇱 PL</button></div>
+        <div class="toggle-row"><span data-i18n="version">Version</span><button class="btn btn-secondary" id="versionToggle" style="min-height:36px;padding:.4rem .9rem;font-size:.85rem;font-weight:700;">v2 ▾</button></div>
       </div>
 
       <div class="section notes">
-        <h2>Docking tips</h2>
-        <p>W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.</p>
-        <p>Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.</p>
+        <h2 data-i18n="dockingTips">Docking tips</h2>
+        <p data-i18n="tip1">W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.</p>
+        <p data-i18n="tip2">Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.</p>
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" id="resetBtn">Reset run</button>
-        <button class="btn btn-secondary" id="pauseBtn">Pause</button>
+        <button class="btn btn-primary" id="resetBtn" data-i18n="resetRun">Reset run</button>
+        <button class="btn btn-secondary" id="pauseBtn" data-i18n="pause">Pause</button>
       </div>
     </aside>
 
     <section class="stage-wrap" id="game" aria-label="Game stage">
       <div class="hud">
-        <div><strong>Goal:</strong> <span>Park in the white box by the bridge with the boat at 355° to 5° relative to the bridge.</span></div>
+        <div><strong data-i18n="goalLabel">Goal:</strong> <span data-i18n="goalText">Park in the white box by the bridge with the boat at 355° to 5° relative to the bridge.</span></div>
         <div class="legend">
-          <span class="legend-item"><span class="swatch" style="background:#d6c4a8"></span>Dock / land</span>
-          <span class="legend-item"><span class="swatch" style="background:#ffffff"></span>Parking box</span>
-          <span class="legend-item"><span class="swatch" style="background:#e06868"></span>Buoy / obstacle</span>
+          <span class="legend-item"><span class="swatch" style="background:#d6c4a8"></span><span data-i18n="legendLand">Dock / land</span></span>
+          <span class="legend-item"><span class="swatch" style="background:#ffffff"></span><span data-i18n="legendBox">Parking box</span></span>
+          <span class="legend-item"><span class="swatch" style="background:#e06868"></span><span data-i18n="legendBuoy">Buoy / obstacle</span></span>
         </div>
       </div>
       <canvas id="simCanvas" width="1280" height="840" aria-label="Top-down rowing simulator"></canvas>
       <div class="overlay" id="messageBox"><h3>Park by the bridge</h3><p>Approach from open water, slow down, rotate the shell, and settle fully into the bridge-side parking box.</p></div>
-      <div class="success-banner" id="successBanner"><div class="success-card"><strong>Wow, brawo wioślarzu!</strong><span>Perfekcyjne parkowanie, Pani trener byłaby zadowolona!</span></div></div>
+      <div class="success-banner" id="successBanner"><div class="success-card"><strong>Gratulacje!</strong><span>Można wysiadać. ALE NIE WSZYSCY NARAZ!</span></div></div>
       <!-- On-screen steering pad -->
       <div id="steerPad" style="
         position:absolute; bottom:1.4rem; right:1.4rem;
@@ -270,7 +273,7 @@
     const themeToggle = document.getElementById('themeToggle');
 
     let running = true;
-    let riverFlowEnabled = false;
+    let riverFlowEnabled = true;
     let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', currentTheme);
 
@@ -292,6 +295,10 @@
     });
 
     flowToggle.addEventListener('change', () => riverFlowEnabled = flowToggle.checked);
+    flowToggle.checked = true;
+    let lowSensitivity = false;
+    const sensitivityToggle = document.getElementById('sensitivityToggle');
+    sensitivityToggle.addEventListener('change', () => lowSensitivity = sensitivityToggle.checked);
     resetBtn.addEventListener('click', resetBoat);
     pauseBtn.addEventListener('click', () => {
       running = !running;
@@ -305,33 +312,20 @@
     const world = {
       width: canvas.width,
       height: canvas.height,
-      leftBank: [
-        {x:0,y:0},{x:220,y:0},{x:180,y:120},{x:210,y:240},{x:175,y:360},{x:205,y:540},{x:170,y:700},{x:210,y:840},{x:0,y:840}
-      ],
-      rightBank: [
-        {x:1280,y:0},{x:1010,y:0},{x:1040,y:190},{x:1080,y:310},{x:980,y:470},{x:1040,y:610},{x:1000,y:840},{x:1280,y:840}
-      ],
-      marina: { x: 820, y: 260, w: 330, h: 250 },
-      dockWalls: [
-        {x: 820, y: 260, w: 18, h: 250},
-        {x: 820, y: 260, w: 220, h: 18},
-        {x: 820, y: 492, w: 220, h: 18},
-        {x: 875, y: 278, w: 12, h: 120},
-        {x: 945, y: 278, w: 12, h: 120},
-        {x: 1015, y: 278, w: 12, h: 120}
-      ],
-      bridge: { x1: 490, y1: 155, x2: 935, y2: 155, angle: 0, thickness: 22 },
-      berth: { x: 620, y: 185, w: 210, h: 90 },
-      hangar: { x: 950, y: 52, w: 170, h: 78 },
-      buoys: [
-        {x: 650, y: 205, r: 11}, {x: 615, y: 610, r: 10}, {x: 760, y: 670, r: 12}, {x: 1130, y: 185, r: 11}, {x: 1152, y: 640, r: 10}
-      ],
-      flow: { x: 28, y: 8 }
+      leftBank: [{x:0,y:840},{x:0,y:570},{x:380,y:560},{x:380,y:840},{x:580,y:840},{x:580,y:560},{x:1280,y:570},{x:1280,y:840}],
+      rightBank: [{x:0,y:0},{x:1280,y:0},{x:1280,y:220},{x:1100,y:200},{x:950,y:190},{x:820,y:240},{x:700,y:280},{x:600,y:270},{x:480,y:230},{x:340,y:205},{x:180,y:195},{x:0,y:210}],
+      marina: { x: 380, y: 580, w: 200, h: 140 },
+      dockWalls: [{x:362,y:560,w:18,h:280},{x:580,y:560,w:18,h:280}],
+      bridge: { x1: 380, y1: 560, x2: 380, y2: 840, angle: -1.5708, thickness: 40 },
+      berth: { x: 390, y: 590, w: 160, h: 200 },
+      hangar: { x: 80, y: 680, w: 140, h: 80 },
+      buoys: [],
+      flow: { x: -28, y: 0 }
     };
 
     const boat = {
-      x: 360, y: 690,
-      angle: -0.6,
+      x: 900, y: 390,
+      angle: 3.14159,
       vx: 0, vy: 0, angularVelocity: 0,
       length: 86, width: 20,
       maxStroke: 65,
@@ -390,7 +384,8 @@
         tapped[name] = true;
         const forward = { x: Math.cos(boat.angle), y: Math.sin(boat.angle) };
         const total = portImpulse + starImpulse;
-        const yaw = (starImpulse - portImpulse) * 0.018;
+        const sensMult = lowSensitivity ? 0.4 : 1.0;
+        const yaw = (starImpulse - portImpulse) * 0.018 * sensMult;
         boat.vx += forward.x * total * 0.46;
         boat.vy += forward.y * total * 0.46;
         boat.angularVelocity += yaw;
@@ -398,11 +393,11 @@
     }
 
     function pointOnBridge(p) {
-      // Bridge is a thick horizontal line from x1,y1 to x2,y2
-      const bx1 = world.bridge.x1, bx2 = world.bridge.x2;
-      const by = world.bridge.y1;
+      // Bridge is a thick VERTICAL line on the left wall of the T inlet
+      const bx = world.bridge.x1;
+      const by1 = world.bridge.y1, by2 = world.bridge.y2;
       const half = world.bridge.thickness / 2 + 2;
-      return p.x >= bx1 && p.x <= bx2 && p.y >= by - half && p.y <= by + half;
+      return p.x >= bx - half && p.x <= bx + half && p.y >= by1 && p.y <= by2;
     }
 
     function handleCollision() {
@@ -448,25 +443,25 @@
       pulseStroke('d', 0, boat.maxStroke * 0.38);
 
       if (keys.has('a') && keys.has('z')) {
-        boat.angularVelocity -= 1.18 * dt;
+        boat.angularVelocity -= (lowSensitivity ? 0.5 : 1.18) * dt;
         boat.vx *= 0.992;
         boat.vy *= 0.992;
       } else if (keys.has('z')) {
         // backwards left: reverse thrust + turn left
         boat.vx -= forward.x * boat.maxStroke * dt * 0.22;
         boat.vy -= forward.y * boat.maxStroke * dt * 0.22;
-        boat.angularVelocity -= 1.4 * dt;
+        boat.angularVelocity -= (lowSensitivity ? 0.9 : 2.2) * dt;
       }
 
       if (keys.has('d') && keys.has('c')) {
-        boat.angularVelocity += 1.18 * dt;
+        boat.angularVelocity += (lowSensitivity ? 0.5 : 1.18) * dt;
         boat.vx *= 0.992;
         boat.vy *= 0.992;
       } else if (keys.has('c')) {
         // backwards right: reverse thrust + turn right
         boat.vx -= forward.x * boat.maxStroke * dt * 0.22;
         boat.vy -= forward.y * boat.maxStroke * dt * 0.22;
-        boat.angularVelocity += 1.4 * dt;
+        boat.angularVelocity += (lowSensitivity ? 0.9 : 2.2) * dt;
       }
 
       const velForward = boat.vx * forward.x + boat.vy * forward.y;
@@ -582,6 +577,39 @@
       ctx.fillStyle = '#18343b';
       ctx.font = '700 16px Satoshi, sans-serif';
       ctx.fillText('START', startState.x + 12, startState.y + 5);
+      // River label
+      ctx.globalAlpha = 0.38;
+      ctx.fillStyle = '#1a5a6e';
+      ctx.font = 'italic 700 28px Satoshi, sans-serif';
+      ctx.fillText('Odra', 550, 400);
+      ctx.fillText('Odra', 1000, 390);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawClubBuildings() {
+      // Rowing club buildings on south bank (bottom-left)
+      ctx.fillStyle = '#d4cfc8';
+      ctx.fillRect(80,  690, 140, 80);    // main building
+      ctx.fillStyle = '#bfbab2';
+      ctx.fillRect(170, 678, 60, 26);     // annex
+      ctx.fillStyle = '#a09890';
+      ctx.fillRect(80,  750, 50, 26);     // shed
+      // Trees along north bank
+      const treeColor2 = ['#4a7c45','#3d6b3a','#5a8f52'];
+      [{x:700,y:260},{x:760,y:245},{x:820,y:255},{x:880,y:240},{x:940,y:210},{x:1000,y:200},{x:1060,y:215}]
+        .forEach((t,i)=>{ ctx.fillStyle=treeColor2[i%3]; ctx.beginPath(); ctx.arc(t.x,t.y,16,0,Math.PI*2); ctx.fill(); });
+      // Wooded north bank island tufts
+      const treeColor = ['#4a7c45','#3d6b3a','#5a8f52'];
+      const trees = [
+        {x:780,y:260},{x:820,y:240},{x:860,y:270},{x:900,y:250},
+        {x:950,y:210},{x:1000,y:185},{x:1050,y:175},{x:1100,y:195}
+      ];
+      trees.forEach((t,i)=>{
+        ctx.fillStyle = treeColor[i%3];
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 18+Math.sin(i)*5, 0, Math.PI*2);
+        ctx.fill();
+      });
     }
 
     function drawFlow() {
@@ -605,28 +633,28 @@
     }
 
     function drawBridgeAndDock() {
-      // Bridge pillars only - no top land fill
-      ctx.fillStyle = '#b19a73';
-      ctx.fillRect(468, 122, 32, 60);
-      ctx.fillRect(922, 122, 32, 60);
+      // T-inlet: draw the two land walls and the bridge at the bottom
+      ctx.fillStyle = '#ccb48c';
+      ctx.fillRect(362, 558, 20, 282);   // left inlet wall (land)
+      ctx.fillRect(578, 558, 20, 282);   // right inlet wall (land)
 
       ctx.strokeStyle = '#7a5632';
       ctx.lineWidth = world.bridge.thickness;
-      ctx.lineCap = 'round';
+      ctx.lineCap = 'butt';
       ctx.beginPath();
       ctx.moveTo(world.bridge.x1, world.bridge.y1);
       ctx.lineTo(world.bridge.x2, world.bridge.y2);
       ctx.stroke();
       ctx.strokeStyle = '#9c7446';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(world.bridge.x1, world.bridge.y1 - 4);
-      ctx.lineTo(world.bridge.x2, world.bridge.y2 - 4);
+      ctx.moveTo(world.bridge.x1 + 3, world.bridge.y1);
+      ctx.lineTo(world.bridge.x2 + 3, world.bridge.y2);
       ctx.stroke();
 
       const people = [
-        {x:560,y:145,balloon:'#ff6b6b'}, {x:620,y:147,balloon:'#ffd166'}, {x:700,y:146,balloon:'#6ecbff'},
-        {x:780,y:145,balloon:'#a87cff'}, {x:850,y:147,balloon:'#7bd389'}
+        {x:380,y:610,balloon:'#ff6b6b'}, {x:380,y:660,balloon:'#ffd166'}, {x:380,y:710,balloon:'#6ecbff'},
+        {x:380,y:760,balloon:'#a87cff'}, {x:380,y:810,balloon:'#7bd389'}
       ];
       for (const p of people) {
         ctx.strokeStyle = '#2f2419';
@@ -756,6 +784,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawWater();
       drawBanks();
+      drawClubBuildings();
       drawFlow();
       drawBridgeAndDock();
       drawHUDGuide();
@@ -775,6 +804,98 @@
     render();
     requestAnimationFrame((ts) => { lastTs = ts; loop(ts); });
   
+
+    // ===== LANGUAGE / i18n =====
+    const i18n = {
+      en: {
+        brandSub: "Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.",
+        telemetry: "Telemetry", controls: "Controls", waterSettings: "Water settings",
+        dockingTips: "Docking tips", boatSpeed: "Boat speed", bridgeAngle: "Bridge angle",
+        parkDist: "Park distance", riverAssist: "River assist",
+        ctrl_w: "Both oars forward", ctrl_s: "Both oars backwards",
+        ctrl_a: "Left oar forward", ctrl_d: "Right oar forward",
+        ctrl_z: "Left oar back / hold", ctrl_c: "Right oar back / hold",
+        enableFlow: "Enable river flow", lowSens: "Low turn sensitivity",
+        darkMode: "Dark mode", language: "Language", version: "Version",
+        tip1: "W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.",
+        tip2: "Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.",
+        resetRun: "Reset run", pause: "Pause", resume: "Resume",
+        goalLabel: "Goal:", goalText: "Park in the white box by the bridge with the boat at 355°–5° or 175°–185°.",
+        legendLand: "Dock / land", legendBox: "Parking box", legendBuoy: "Buoy / obstacle",
+        contactTitle: "Contact", contactBody: "You clipped a bank, bridge, pontoon, or buoy. Slow down and steer away.",
+        freshTitle: "Fresh attempt", freshBody: "Tap W, S, A, and D for individual strokes. Use short correction taps and settle into the bridge-side box nearly parallel to the bridge.",
+        winTitle: "Gratulacje!", winBody: "Można wysiadać. ALE NIE WSZYSCY NARAZ!",
+        startLabel: "START"
+      },
+      pl: {
+        brandSub: "Wyzwanie parkowania przy moście — widok z góry, pojedyncze pociągnięcia wiosłem, opcjonalny prąd rzeki.",
+        telemetry: "Telemetria", controls: "Sterowanie", waterSettings: "Ustawienia wody",
+        dockingTips: "Wskazówki cumowania", boatSpeed: "Prędkość łodzi", bridgeAngle: "Kąt do mostu",
+        parkDist: "Odległość od boksu", riverAssist: "Prąd rzeki",
+        ctrl_w: "Oba wiosła do przodu", ctrl_s: "Oba wiosła do tyłu",
+        ctrl_a: "Lewe wiosło do przodu", ctrl_d: "Prawe wiosło do przodu",
+        ctrl_z: "Lewe wiosło wstecz / trzymaj", ctrl_c: "Prawe wiosło wstecz / trzymaj",
+        enableFlow: "Włącz prąd rzeki", lowSens: "Niska czułość skrętu",
+        darkMode: "Tryb ciemny", language: "Język", version: "Wersja",
+        tip1: "W i S to pojedyncze pociągnięcia — stukaj je aby się poruszać. A i D też wiosłują jednostronnie przy każdym naciśnięciu.",
+        tip2: "Używaj Z lub C do korekty wstecznej, i na zmianę stukaj zamiast trzymać A lub D przy sterowaniu.",
+        resetRun: "Resetuj", pause: "Pauza", resume: "Wznów",
+        goalLabel: "Cel:", goalText: "Zaparkuj w białym boksie przy moście pod kątem 355°–5° lub 175°–185°.",
+        legendLand: "Nabrzeże / ląd", legendBox: "Boks parkingowy", legendBuoy: "Boja / przeszkoda",
+        contactTitle: "Kontakt!", contactBody: "Zahaczyłeś o brzeg, most, pomost lub boję. Zwolnij i zmień kurs.",
+        freshTitle: "Nowa próba", freshBody: "Stukaj W, S, A i D dla pojedynczych pociągnięć. Delikatnie koryguj i wpłyń równolegle do mostu.",
+        winTitle: "Gratulacje!", winBody: "Można wysiadać. ALE NIE WSZYSCY NARAZ!",
+        startLabel: "START"
+      }
+    };
+    let currentLang = 'pl';
+
+    function applyLang(lang) {
+      currentLang = lang;
+      const t = i18n[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key] !== undefined) el.textContent = t[key];
+      });
+      // Update pause/resume button correctly
+      const pb = document.getElementById('pauseBtn');
+      if (pb) pb.textContent = running ? t.pause : t.resume;
+      document.getElementById('langToggle').textContent = lang === 'en' ? '🇵🇱 PL' : '🇬🇧 EN';
+    }
+
+    const langToggleBtn = document.getElementById('langToggle');
+    langToggleBtn.addEventListener('click', () => {
+      applyLang(currentLang === 'en' ? 'pl' : 'en');
+    });
+    // Apply Polish on startup
+    applyLang('pl');
+
+    // showMessage is already defined as a regular function above - no override needed
+
+    // ===== VERSION SWITCHER =====
+    const versions = [
+      { label: 'v2 (current)', url: null },
+      { label: 'v1 (original)', url: 'rowmageddon.html' }
+    ];
+    let vIdx = 0;
+    const vBtn = document.getElementById('versionToggle');
+    vBtn.addEventListener('click', () => {
+      vIdx = (vIdx + 1) % versions.length;
+      const v = versions[vIdx];
+      vBtn.textContent = v.label + ' ▾';
+      if (v.url) {
+        if (confirm('Switch to ' + v.label + '? This will navigate away.')) {
+          window.location.href = v.url;
+        } else {
+          vIdx = 0;
+          vBtn.textContent = versions[0].label + ' ▾';
+        }
+      } else {
+        vBtn.textContent = versions[0].label + ' ▾';
+      }
+    });
+
+
     // ===== ON-SCREEN STEERING BUTTONS =====
     (function() {
       const btnMap = {
