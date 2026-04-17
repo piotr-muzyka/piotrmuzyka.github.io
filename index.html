@@ -152,6 +152,65 @@
       <canvas id="simCanvas" width="1280" height="840" aria-label="Top-down rowing simulator"></canvas>
       <div class="overlay" id="messageBox"><h3>Park by the bridge</h3><p>Approach from open water, slow down, rotate the shell, and settle fully into the bridge-side parking box.</p></div>
       <div class="success-banner" id="successBanner"><div class="success-card"><strong>Wow, brawo wioślarzu!</strong><span>Perfekcyjne parkowanie, Pani trener byłaby zadowolona!</span></div></div>
+      <!-- On-screen steering pad -->
+      <div id="steerPad" style="
+        position:absolute; bottom:1.4rem; right:1.4rem;
+        display:grid; grid-template-columns: repeat(3,52px); grid-template-rows: repeat(3,52px);
+        gap:5px; z-index:10; user-select:none;
+      ">
+        <!-- Row 1: fwd-left | forward | fwd-right -->
+        <button class="arrow-btn" id="btnFwdLeft" aria-label="Forward left oar" title="Left oar forward"
+          style="grid-column:1;grid-row:1">
+          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,3 22,21 2,21" fill="currentColor" opacity="0.5"/><line x1="4" y1="20" x2="4" y2="8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+        <button class="arrow-btn" id="btnUp" aria-label="Row forward"
+          style="grid-column:2;grid-row:1">
+          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,3 22,21 2,21" fill="currentColor"/></svg>
+        </button>
+        <button class="arrow-btn" id="btnFwdRight" aria-label="Forward right oar" title="Right oar forward"
+          style="grid-column:3;grid-row:1">
+          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,3 22,21 2,21" fill="currentColor" opacity="0.5"/><line x1="20" y1="20" x2="20" y2="8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+        <!-- Row 2: turn-left | (empty center) | turn-right -->
+        <button class="arrow-btn" id="btnLeft" aria-label="Turn left"
+          style="grid-column:1;grid-row:2">
+          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="3,12 21,2 21,22" fill="currentColor"/></svg>
+        </button>
+        <div style="grid-column:2;grid-row:2"></div>
+        <button class="arrow-btn" id="btnRight" aria-label="Turn right"
+          style="grid-column:3;grid-row:2">
+          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="21,12 3,2 3,22" fill="currentColor"/></svg>
+        </button>
+        <!-- Row 3: back-left | backward | back-right -->
+        <button class="arrow-btn" id="btnBkLeft" aria-label="Backward left oar" title="Left oar back"
+          style="grid-column:1;grid-row:3">
+          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,21 2,3 22,3" fill="currentColor" opacity="0.5"/><line x1="4" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+        <button class="arrow-btn" id="btnDown" aria-label="Row backward"
+          style="grid-column:2;grid-row:3">
+          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,21 2,3 22,3" fill="currentColor"/></svg>
+        </button>
+        <button class="arrow-btn" id="btnBkRight" aria-label="Backward right oar" title="Right oar back"
+          style="grid-column:3;grid-row:3">
+          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,21 2,3 22,3" fill="currentColor" opacity="0.5"/><line x1="20" y1="4" x2="20" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+        <style>
+          .arrow-btn {
+            width:52px; height:52px; border-radius:12px;
+            background: rgba(10,20,40,0.72);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.88);
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; backdrop-filter:blur(6px);
+            transition: background 0.12s, transform 0.08s;
+            touch-action: none;
+          }
+          .arrow-btn:active, .arrow-btn.pressed {
+            background: rgba(1,105,111,0.85);
+            transform: scale(0.93);
+          }
+        </style>
+      </div>
     </section>
   
   <!-- Intro Screen -->
@@ -385,17 +444,18 @@
 
       pulseStroke('w', boat.maxStroke, boat.maxStroke);
       pulseStroke('s', -boat.maxStroke * 0.92, -boat.maxStroke * 0.92);
-      pulseStroke('a', boat.maxStroke * 0.72, 0);
-      pulseStroke('d', 0, boat.maxStroke * 0.72);
+      pulseStroke('a', boat.maxStroke * 0.38, 0);
+      pulseStroke('d', 0, boat.maxStroke * 0.38);
 
       if (keys.has('a') && keys.has('z')) {
         boat.angularVelocity -= 1.18 * dt;
         boat.vx *= 0.992;
         boat.vy *= 0.992;
       } else if (keys.has('z')) {
-        boat.vx -= forward.x * boat.maxStroke * dt * 0.18;
-        boat.vy -= forward.y * boat.maxStroke * dt * 0.18;
-        boat.angularVelocity -= 0.35 * dt;
+        // backwards left: reverse thrust + turn left
+        boat.vx -= forward.x * boat.maxStroke * dt * 0.22;
+        boat.vy -= forward.y * boat.maxStroke * dt * 0.22;
+        boat.angularVelocity -= 1.4 * dt;
       }
 
       if (keys.has('d') && keys.has('c')) {
@@ -403,9 +463,10 @@
         boat.vx *= 0.992;
         boat.vy *= 0.992;
       } else if (keys.has('c')) {
-        boat.vx -= forward.x * boat.maxStroke * dt * 0.18;
-        boat.vy -= forward.y * boat.maxStroke * dt * 0.18;
-        boat.angularVelocity += 0.35 * dt;
+        // backwards right: reverse thrust + turn right
+        boat.vx -= forward.x * boat.maxStroke * dt * 0.22;
+        boat.vy -= forward.y * boat.maxStroke * dt * 0.22;
+        boat.angularVelocity += 1.4 * dt;
       }
 
       const velForward = boat.vx * forward.x + boat.vy * forward.y;
@@ -462,7 +523,7 @@
       const speed = Math.hypot(boat.vx, boat.vy);
       const bridgeDeg = ((boat.angle - world.bridge.angle) * 180 / Math.PI + 360) % 360;
       const inZone = boat.x > world.berth.x && boat.x < world.berth.x + world.berth.w && boat.y > world.berth.y && boat.y < world.berth.y + world.berth.h;
-      const aligned = bridgeDeg >= 355 || bridgeDeg <= 5;
+      const aligned = (bridgeDeg >= 355 || bridgeDeg <= 5) || (bridgeDeg >= 175 && bridgeDeg <= 185);
       if (!win && inZone && aligned && speed < 14) {
         win = true;
         running = false;
@@ -714,7 +775,44 @@
     render();
     requestAnimationFrame((ts) => { lastTs = ts; loop(ts); });
   
-    // ===== INTRO SCREEN =====
+    // ===== ON-SCREEN STEERING BUTTONS =====
+    (function() {
+      const btnMap = {
+        btnUp:       'w',
+        btnDown:     's',
+        btnLeft:     'a',
+        btnRight:    'd',
+        btnFwdLeft:  'a',
+        btnFwdRight: 'd',
+        btnBkLeft:   'z',
+        btnBkRight:  'c'
+      };
+      Object.entries(btnMap).forEach(([id, key]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        function press(e) {
+          e.preventDefault();
+          btn.classList.add('pressed');
+          if (!keys.has(key)) {
+            keys.add(key);
+            // Fire tapped reset so pulseStroke fires
+            if (key in tapped) tapped[key] = false;
+          }
+        }
+        function release(e) {
+          e.preventDefault();
+          btn.classList.remove('pressed');
+          keys.delete(key);
+          if (key in tapped) tapped[key] = false;
+        }
+        btn.addEventListener('pointerdown', press);
+        btn.addEventListener('pointerup', release);
+        btn.addEventListener('pointerleave', release);
+        btn.addEventListener('pointercancel', release);
+      });
+    })();
+
+        // ===== INTRO SCREEN =====
     (function() {
       const introScreen = document.getElementById('introScreen');
       const introCanvas = document.getElementById('introCanvas');
