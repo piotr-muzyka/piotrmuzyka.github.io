@@ -153,6 +153,47 @@
       <div class="overlay" id="messageBox"><h3>Park by the bridge</h3><p>Approach from open water, slow down, rotate the shell, and settle fully into the bridge-side parking box.</p></div>
       <div class="success-banner" id="successBanner"><div class="success-card"><strong>Wow, brawo wioślarzu!</strong><span>Perfekcyjne parkowanie, Pani trener byłaby zadowolona!</span></div></div>
     </section>
+  
+  <!-- Intro Screen -->
+  <div id="introScreen" style="
+    position:fixed; inset:0; z-index:9999;
+    display:flex; align-items:center; justify-content:center;
+    background:#05071a;
+    overflow:hidden;
+  ">
+    <canvas id="introCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+    <div id="introTitle" style="
+      position:relative; z-index:2;
+      font-family: 'Cabinet Grotesk', Impact, sans-serif;
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #ff1a1a;
+      text-shadow:
+        4px 4px 0px #7a0000,
+        8px 8px 0px #4a0000,
+        12px 12px 0px #200000,
+        0 0 40px #ff0000,
+        0 0 80px #aa0000;
+      user-select:none;
+      animation: introFlicker 0.12s infinite alternate;
+    ">ROWMAGEDDON
+      <!-- Blood drips SVG overlay -->
+      <svg id="bloodDrips" style="position:absolute;top:100%;left:0;width:100%;pointer-events:none;" height="90" viewBox="0 0 900 90" preserveAspectRatio="none"></svg>
+    </div>
+    <style>
+      @keyframes introFlicker {
+        from { filter: brightness(1) drop-shadow(0 0 18px #ff0000); }
+        to   { filter: brightness(1.08) drop-shadow(0 0 32px #ff4444); }
+      }
+      @keyframes drip {
+        0%   { transform: scaleY(0); transform-origin: top; opacity:1; }
+        80%  { transform: scaleY(1); transform-origin: top; opacity:1; }
+        100% { transform: scaleY(1); transform-origin: top; opacity:0.7; }
+      }
+    </style>
+  </div>
+
   </main>
 
   <script>
@@ -297,23 +338,44 @@
       }
     }
 
+    function pointOnBridge(p) {
+      // Bridge is a thick horizontal line from x1,y1 to x2,y2
+      const bx1 = world.bridge.x1, bx2 = world.bridge.x2;
+      const by = world.bridge.y1;
+      const half = world.bridge.thickness / 2 + 2;
+      return p.x >= bx1 && p.x <= bx2 && p.y >= by - half && p.y <= by + half;
+    }
+
     function handleCollision() {
       const corners = getBoatCorners();
       let hit = false;
       for (const p of corners) {
         if (pointInPolygon(p, world.leftBank) || pointInPolygon(p, world.rightBank)) hit = true;
+        if (pointOnBridge(p)) hit = true;
         for (const wall of world.dockWalls) if (rectCollision(wall, p)) hit = true;
         for (const buoy of world.buoys) {
           const dx = p.x - buoy.x, dy = p.y - buoy.y;
           if (dx * dx + dy * dy < (buoy.r + 8) * (buoy.r + 8)) hit = true;
         }
       }
-      if (hit && crashCooldown <= 0) {
-        boat.vx *= -0.28; boat.vy *= -0.28; boat.angularVelocity *= -0.4;
-        boat.x += Math.cos(boat.angle + Math.PI) * 8;
-        boat.y += Math.sin(boat.angle + Math.PI) * 8;
-        crashCooldown = 0.7;
-        showMessage('Contact', 'You clipped a bank, bridge area, pontoon, or buoy. Reset your angle and approach more slowly.');
+      if (hit) {
+        // Always push back - solid collision
+        boat.vx *= -0.35; boat.vy *= -0.35; boat.angularVelocity *= -0.4;
+        boat.x += Math.cos(boat.angle + Math.PI) * 10;
+        boat.y += Math.sin(boat.angle + Math.PI) * 10;
+        // Extra push: move away from each colliding bank polygon
+        for (const p of corners) {
+          if (pointInPolygon(p, world.leftBank)) { boat.x += 6; }
+          if (pointInPolygon(p, world.rightBank)) { boat.x -= 6; }
+          if (pointOnBridge(p)) {
+            // push away from bridge (downward = positive y)
+            boat.y += (p.y < world.bridge.y1) ? -8 : 8;
+          }
+        }
+        if (crashCooldown <= 0) {
+          crashCooldown = 0.7;
+          showMessage('Contact', 'You clipped a bank, bridge, pontoon, or buoy. Slow down and steer away.');
+        }
       }
     }
 
@@ -482,8 +544,7 @@
     }
 
     function drawBridgeAndDock() {
-      ctx.fillStyle = '#ccb48c';
-      ctx.fillRect(430, 0, 760, 152);
+      // Bridge pillars only - no top land fill
       ctx.fillStyle = '#b19a73';
       ctx.fillRect(468, 122, 32, 60);
       ctx.fillRect(922, 122, 32, 60);
@@ -652,6 +713,92 @@
     resetBoat();
     render();
     requestAnimationFrame((ts) => { lastTs = ts; loop(ts); });
+  
+    // ===== INTRO SCREEN =====
+    (function() {
+      const introScreen = document.getElementById('introScreen');
+      const introCanvas = document.getElementById('introCanvas');
+      const ictx = introCanvas.getContext('2d');
+      const bloodSvg = document.getElementById('bloodDrips');
+
+      // Generate blood drip SVG paths
+      function makeDrips() {
+        bloodSvg.innerHTML = '';
+        const count = 18;
+        for (let i = 0; i < count; i++) {
+          const x = 20 + (860 / count) * i + Math.random() * 30 - 10;
+          const h = 20 + Math.random() * 60;
+          const w = 4 + Math.random() * 8;
+          const delay = Math.random() * 1.2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+          // Drip shape: rectangle with rounded bottom
+          const rx = w / 2;
+          path.setAttribute('d',
+            `M${x},0 L${x+w},0 L${x+w},${h-rx} Q${x+w},${h} ${x+rx},${h} Q${x},${h} ${x},${h-rx} Z`
+          );
+          path.setAttribute('fill','#cc0000');
+          path.style.animation = `drip ${0.6 + Math.random()*0.8}s ${delay}s ease-out forwards`;
+          path.style.transformOrigin = `${x}px 0px`;
+          path.style.transform = 'scaleY(0)';
+          bloodSvg.appendChild(path);
+        }
+      }
+      makeDrips();
+
+      // Wavy navy background on intro canvas
+      function resizeIntroCanvas() {
+        introCanvas.width = window.innerWidth;
+        introCanvas.height = window.innerHeight;
+      }
+      resizeIntroCanvas();
+      window.addEventListener('resize', resizeIntroCanvas);
+
+      let introT = 0;
+      function drawIntroWaves() {
+        introT += 0.018;
+        const w = introCanvas.width, h = introCanvas.height;
+        // Deep navy gradient
+        const grad = ictx.createLinearGradient(0,0,0,h);
+        grad.addColorStop(0,'#02040f');
+        grad.addColorStop(0.5,'#050d2a');
+        grad.addColorStop(1,'#030918');
+        ictx.fillStyle = grad;
+        ictx.fillRect(0,0,w,h);
+        // Wavy lines
+        ictx.globalAlpha = 0.22;
+        for (let row = 0; row < 14; row++) {
+          const y = (h / 13) * row;
+          ictx.beginPath();
+          for (let x = 0; x <= w; x += 8) {
+            const wy = y + Math.sin((x * 0.008) + introT + row * 0.7) * 18
+                         + Math.sin((x * 0.014) + introT * 1.3 + row) * 10;
+            if (x === 0) ictx.moveTo(x, wy); else ictx.lineTo(x, wy);
+          }
+          ictx.strokeStyle = `hsl(${220 + row * 3}, 70%, ${20 + row * 1.5}%)`;
+          ictx.lineWidth = 2.5;
+          ictx.stroke();
+        }
+        ictx.globalAlpha = 1;
+      }
+
+      let introRAF;
+      function introLoop() {
+        drawIntroWaves();
+        introRAF = requestAnimationFrame(introLoop);
+      }
+      introLoop();
+
+      // Dismiss intro after 3 seconds with fade
+      setTimeout(() => {
+        introScreen.style.transition = 'opacity 0.7s ease';
+        introScreen.style.opacity = '0';
+        setTimeout(() => {
+          cancelAnimationFrame(introRAF);
+          introScreen.style.display = 'none';
+        }, 700);
+      }, 3000);
+    })();
+
   </script>
 </body>
 </html>
