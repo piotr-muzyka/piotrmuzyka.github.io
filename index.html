@@ -75,10 +75,11 @@
     .legend-item { display: inline-flex; align-items: center; gap: .5rem; }
     .swatch { width: 14px; height: 14px; border-radius: 50%; }
     .overlay {
-      position: absolute;
-      left: 50%; bottom: 10px;
-      transform: translateX(-50%);
-      width: min(340px, calc(100% - 1.5rem));
+      position: relative;
+      left: auto; bottom: auto;
+      transform: none;
+      width: 100%;
+      margin: 6px 0 2px;
       background: color-mix(in srgb, var(--color-surface) 95%, transparent);
       border: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
       padding: 8px 14px;
@@ -142,13 +143,7 @@
           <path d="M21 34l8 10M42 31l-7 12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
           <path d="M18 38c8-8 16-12 28-13" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".7"/>
         </svg>
-        <div>
-          <h1>Marina Row</h1>
-          <p>Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.</p>
-        </div>
-      </div>
-
-      <div class="section">
+              <div class="section">
         <h2>Telemetry</h2>
         <div class="stats">
           <article class="stat"><div class="stat-label">Boat speed</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
@@ -171,7 +166,8 @@
       <div class="section">
         <h2>Water settings</h2>
         <label class="toggle-row" for="minesToggle"><span>💣 Miny wodne</span><input class="toggle" id="minesToggle" type="checkbox" /></label>
-        <label class="toggle-row" for="flowToggle"><span>Enable river flow</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
+        <label class="toggle-row" for="flowToggle"><span data-i18n="rfLabel">Prąd rzeki</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
+        <label class="toggle-row" for="strongFlowToggle"><span data-i18n="strongLabel">Silny prąd</span><input class="toggle" id="strongFlowToggle" type="checkbox" aria-label="Strong river current" /></label>
         <label class="toggle-row" for="themeToggle"><span>Dark mode</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
       </div>
 
@@ -199,6 +195,8 @@
       </div>
       <div class="canvas-wrap">
       <canvas id="simCanvas" width="1280" height="840" aria-label="Top-down rowing simulator"></canvas>
+      <div class="overlay" id="messageBox"><h3>Przybij do pomostu</h3><p>Wpłyń do białego obszaru przy moście równolegle do mostu (±5°) i zatrzymaj łódź.</p></div>
+      <div class="success-banner" id="successBanner"><div class="success-card"><strong>Gratulacje!</strong><span>Można wysiadać. ALE NIE WSZYSCY NARAZ!</span></div></div>
       <div class="row-btns" id="rowBtns">
         <button class="row-btn fwd" id="btn-a"><span class="bi">🚣↖</span><span data-i18n="btnFL">L WP</span></button>
         <button class="row-btn fwd" id="btn-w"><span class="bi">🚣⬆</span><span data-i18n="btnFB">OBA WP</span></button>
@@ -208,8 +206,6 @@
         <button class="row-btn bwd" id="btn-c"><span class="bi">↘🚣</span><span data-i18n="btnBR">P TYŁ</span></button>
       </div>
     </div>
-      <div class="overlay" id="messageBox"><h3>Przybij do pomostu</h3><p>Wpłyń do białego obszaru równolegle do mostu (±5°) i zatrzymaj łódź.</p></div>
-      <div class="success-banner" id="successBanner"><div class="success-card"><strong>Gratulacje!</strong><span>Można wysiadać. ALE NIE WSZYSCY NARAZ!</span></div></div>
     </section>
   </main>
 
@@ -229,6 +225,7 @@
 
     let running = true;
     let riverFlowEnabled = true;
+    let strongFlowEnabled = true;
     let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', currentTheme);
 
@@ -252,6 +249,9 @@
 
     flowToggle.addEventListener('change', () => riverFlowEnabled = flowToggle.checked);
     flowToggle.checked = true;
+    const strongFlowToggle = document.getElementById('strongFlowToggle');
+    strongFlowToggle.addEventListener('change', () => strongFlowEnabled = strongFlowToggle.checked);
+    strongFlowToggle.checked = true;
     const minesToggle = document.getElementById('minesToggle');
     minesToggle.addEventListener('change', () => {
       minesEnabled = minesToggle.checked;
@@ -474,8 +474,9 @@
 
       if (riverFlowEnabled) {
         const mag = Math.hypot(world.flow.x, world.flow.y);
-        boat.vx += world.flow.x * dt * 0.22;
-        boat.vy += world.flow.y * dt * 0.22;
+        const flowMult = strongFlowEnabled ? 0.55 : 0.22;
+        boat.vx += world.flow.x * dt * flowMult;
+        boat.vy += world.flow.y * dt * flowMult;
         const cross = (forward.x * world.flow.y - forward.y * world.flow.x) / mag;
         const align = (forward.x * world.flow.x + forward.y * world.flow.y) / mag;
         boat.angularVelocity += cross * 0.011;
@@ -720,7 +721,7 @@
       const oa=boat.oarAnim, L=boat.length, W=10, S=5;
       if(oa.portActive!==0){oa.portPhase=Math.min(oa.portPhase+0.016*S,1);if(oa.portPhase>=1)oa.portActive=0;}
       if(oa.starActive!==0){oa.starPhase=Math.min(oa.starPhase+0.016*S,1);if(oa.starPhase>=1)oa.starActive=0;}
-      function sw(ph,ac){return ac===0?-0.18:ac>0?-0.5+ph:0.5-ph;}
+      function sw(ph,ac){return ac===0?0:ac>0?-0.5+ph:0.5-ph;}
       const ps=sw(oa.portPhase,oa.portActive), ss=sw(oa.starPhase,oa.starActive);
       ctx.save(); ctx.translate(boat.x,boat.y); ctx.rotate(boat.angle);
 
@@ -953,12 +954,12 @@ ctx.restore();
   var _t = {
     pl:{ pause:'Pauza', resume:'Wznów', reset:'Restart', langBtn:'🇬🇧 EN',
          speed:'Prędkość łodzi', angle:'Kąt do mostu', dist:'Dystans', flow:'Prąd rzeki',
-         rfLabel:'Prąd rzeki', dmLabel:'Tryb ciemny', minesLabel:'💣 Miny wodne',
+         rfLabel:'Prąd rzeki', strongLabel:'Silny prąd', dmLabel:'Tryb ciemny', minesLabel:'💣 Miny wodne',
          btnFL:'L WP', btnFB:'OBA WP', btnFR:'P WP',
          btnBL:'L TYŁ', btnBB:'OBA TYŁ', btnBR:'P TYŁ' },
     en:{ pause:'Pause', resume:'Resume', reset:'Restart', langBtn:'🇵🇱 PL',
          speed:'Boat speed', angle:'Bridge angle', dist:'Distance', flow:'River flow',
-         rfLabel:'River flow', dmLabel:'Dark mode', minesLabel:'💣 Water mines',
+         rfLabel:'River flow', strongLabel:'Strong current', dmLabel:'Dark mode', minesLabel:'💣 Water mines',
          btnFL:'L FWD', btnFB:'BOTH FWD', btnFR:'R FWD',
          btnBL:'L BWD', btnBB:'BOTH BWD', btnBR:'R BWD' }
   };
