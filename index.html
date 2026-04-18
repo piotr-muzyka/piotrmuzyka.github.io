@@ -39,7 +39,7 @@
     button { cursor: pointer; border: none; background: none; }
     :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-    .app { display: grid; grid-template-columns: minmax(300px, 360px) 1fr; gap: var(--space-6); min-height: 100dvh; padding: var(--space-6); }
+    .app { display: grid; grid-template-columns: minmax(360px, 480px) 1fr; gap: var(--space-6); min-height: 100dvh; padding: var(--space-6); align-items: start; }
     .panel, .stage-wrap { background: color-mix(in srgb, var(--color-surface) 88%, transparent); border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); backdrop-filter: blur(12px); }
     .panel { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-6); position: relative; overflow: hidden; }
     .panel::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--color-primary), var(--color-blue), var(--color-gold)); opacity: .8; }
@@ -131,58 +131,75 @@
     .row-btn .bi { font-size: 1.2rem; line-height: 1; }
     .row-btn.fwd { border-color: color-mix(in srgb, var(--color-primary) 55%, transparent); }
     .row-btn.bwd { border-color: color-mix(in srgb, #e06868 55%, transparent); }
+
+    .panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; }
+    .panel-col { display: flex; flex-direction: column; gap: var(--space-3); }
+    .panel { overflow-y: auto; max-height: 100dvh; }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .panel-cols { grid-template-columns: 1fr; }
+    }
 </style>
 </head>
 <body>
   <a class="sr-only" href="#game">Skip to game</a>
   <main class="app">
     <aside class="panel" aria-label="Game controls and telemetry">
-      <div class="brand">
-        <svg class="logo" viewBox="0 0 64 64" aria-label="Rowing simulator logo" role="img">
-          <path d="M10 44c10-2 19-3 30-1 5 1 10 3 14 5" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-          <path d="M21 34l8 10M42 31l-7 12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-          <path d="M18 38c8-8 16-12 28-13" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".7"/>
-        </svg>
-              <div class="section">
-        <h2>Telemetry</h2>
-        <div class="stats">
-          <article class="stat"><div class="stat-label">Boat speed</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
-          <article class="stat"><div class="stat-label">Bridge angle</div><div class="stat-value" id="angleValue">0°</div></article>
-          <article class="stat"><div class="stat-label">Park distance</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
-          <article class="stat"><div class="stat-label">River assist</div><div class="stat-value" id="flowValue">Off</div></article>
-        </div>
-      </div>
 
-      <div class="section controls">
-        <h2>Controls</h2>
-        <div class="control-row"><span>Both oars forward</span><span class="keycap">W</span></div>
-        <div class="control-row"><span>Both oars backwards</span><span class="keycap">S</span></div>
-        <div class="control-row"><span>Left oar forward</span><span class="keycap">A</span></div>
-        <div class="control-row"><span>Right oar forward</span><span class="keycap">D</span></div>
-        <div class="control-row"><span>Left oar back / hold</span><span class="keycap">Z</span></div>
-        <div class="control-row"><span>Right oar back / hold</span><span class="keycap">C</span></div>
-      </div>
-
-      <div class="section">
-        <h2>Water settings</h2>
-        <label class="toggle-row" for="minesToggle"><span>💣 Miny wodne</span><input class="toggle" id="minesToggle" type="checkbox" /></label>
-        <label class="toggle-row" for="flowToggle"><span data-i18n="rfLabel">Prąd rzeki</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
-        <label class="toggle-row" for="strongFlowToggle"><span data-i18n="strongLabel">Silny prąd</span><input class="toggle" id="strongFlowToggle" type="checkbox" aria-label="Strong river current" /></label>
-        <label class="toggle-row" for="themeToggle"><span>Dark mode</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
-      </div>
-
-      <div class="section notes">
-        <h2>Docking tips</h2>
-        <p>W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.</p>
-        <p>Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.</p>
-      </div>
-
-      <div class="actions">
+      <!-- ── Top action bar ── -->
+      <div class="actions" style="margin-bottom:var(--space-4);">
         <button class="btn btn-primary" id="resetBtn" data-i18n="reset">Restart</button>
         <button class="btn btn-secondary" id="pauseBtn">Pauza</button>
         <button class="btn btn-secondary" id="langBtn" style="min-width:68px;">🇬🇧 EN</button>
       </div>
+
+      <!-- ── 2-column panel grid ── -->
+      <div class="panel-cols">
+
+        <!-- Left column: Telemetry + Water -->
+        <div class="panel-col">
+          <div class="section">
+            <h2 data-i18n="sec_telemetry">Telemetria</h2>
+            <div class="stats">
+              <article class="stat"><div class="stat-label" data-i18n="speed">Prędkość łodzi</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
+              <article class="stat"><div class="stat-label" data-i18n="angle">Kąt do mostu</div><div class="stat-value" id="angleValue">0°</div></article>
+              <article class="stat"><div class="stat-label" data-i18n="dist">Dystans</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
+              <article class="stat"><div class="stat-label" data-i18n="flow">Prąd rzeki</div><div class="stat-value" id="flowValue">Off</div></article>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2 data-i18n="sec_water">Ustawienia wody</h2>
+            <label class="toggle-row" for="minesToggle"><span data-i18n="minesLabel">💣 Miny wodne</span><input class="toggle" id="minesToggle" type="checkbox" /></label>
+            <label class="toggle-row" for="flowToggle"><span data-i18n="rfLabel">Prąd rzeki</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
+            <label class="toggle-row" for="strongFlowToggle"><span data-i18n="strongLabel">Silny prąd</span><input class="toggle" id="strongFlowToggle" type="checkbox" aria-label="Strong river current" /></label>
+            <label class="toggle-row" for="themeToggle"><span data-i18n="dmLabel">Tryb ciemny</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
+          </div>
+        </div>
+
+        <!-- Right column: Controls + Tips -->
+        <div class="panel-col">
+          <div class="section controls">
+            <h2 data-i18n="sec_controls">Sterowanie</h2>
+            <div class="control-row"><span data-i18n="ctrlFwd">Oba wiosła do przodu</span><span class="keycap">W</span></div>
+            <div class="control-row"><span data-i18n="ctrlBack">Oba wiosła do tyłu</span><span class="keycap">S</span></div>
+            <div class="control-row"><span data-i18n="ctrlLeft">Lewe wiosło naprzód</span><span class="keycap">A</span></div>
+            <div class="control-row"><span data-i18n="ctrlRight">Prawe wiosło naprzód</span><span class="keycap">D</span></div>
+            <div class="control-row"><span data-i18n="ctrlZL">Lewe wiosło wstecz</span><span class="keycap">Z</span></div>
+            <div class="control-row"><span data-i18n="ctrlCR">Prawe wiosło wstecz</span><span class="keycap">C</span></div>
+          </div>
+
+          <div class="section notes">
+            <h2 data-i18n="sec_tips">Wskazówki dokowania</h2>
+            <p><span data-i18n="tips1">W i S to pojedyncze uderzenia – tap, nie trzymaj.</span></p>
+            <p><span data-i18n="tips2">Używaj krótkich korekt Z lub C do hamowania i korekty kursu.</span></p>
+          </div>
+        </div>
+
+      </div><!-- /panel-cols -->
+
     </aside>
+
 
     <section class="stage-wrap" id="game" aria-label="Game stage">
       <div class="hud">
@@ -954,12 +971,12 @@ ctx.restore();
   var _t = {
     pl:{ pause:'Pauza', resume:'Wznów', reset:'Restart', langBtn:'🇬🇧 EN',
          speed:'Prędkość łodzi', angle:'Kąt do mostu', dist:'Dystans', flow:'Prąd rzeki',
-         rfLabel:'Prąd rzeki', strongLabel:'Silny prąd', dmLabel:'Tryb ciemny', minesLabel:'💣 Miny wodne',
+         rfLabel:'Prąd rzeki', strongLabel:'Silny prąd', sec_telemetry:'Telemetria', ctrlFwd:'Oba wiosła do przodu', ctrlBack:'Oba wiosła do tyłu', ctrlLeft:'Lewe wiosło naprzód', ctrlRight:'Prawe wiosło naprzód', ctrlZL:'Lewe wiosło wstecz', ctrlCR:'Prawe wiosło wstecz', sec_controls:'Sterowanie', sec_tips:'Wskazówki dokowania', sec_water:'Ustawienia wody', tips1:'W i S to pojedyncze uderzenia – tap, nie trzymaj.', tips2:'Używaj krótkich korekt Z lub C do hamowania i korekty kursu.', dmLabel:'Tryb ciemny', minesLabel:'💣 Miny wodne',
          btnFL:'L WP', btnFB:'OBA WP', btnFR:'P WP',
          btnBL:'L TYŁ', btnBB:'OBA TYŁ', btnBR:'P TYŁ' },
     en:{ pause:'Pause', resume:'Resume', reset:'Restart', langBtn:'🇵🇱 PL',
          speed:'Boat speed', angle:'Bridge angle', dist:'Distance', flow:'River flow',
-         rfLabel:'River flow', strongLabel:'Strong current', dmLabel:'Dark mode', minesLabel:'💣 Water mines',
+         rfLabel:'River flow', strongLabel:'Strong current', sec_telemetry:'Telemetry', ctrlFwd:'Both oars forward', ctrlBack:'Both oars backward', ctrlLeft:'Left oar forward', ctrlRight:'Right oar forward', ctrlZL:'Left oar back', ctrlCR:'Right oar back', sec_controls:'Controls', sec_tips:'Docking tips', sec_water:'Water settings', tips1:'W and S are single strokes – tap, do not hold.', tips2:'Use short Z or C taps for braking and course correction.', dmLabel:'Dark mode', minesLabel:'💣 Water mines',
          btnFL:'L FWD', btnFB:'BOTH FWD', btnFR:'R FWD',
          btnBL:'L BWD', btnBB:'BOTH BWD', btnBR:'R BWD' }
   };
