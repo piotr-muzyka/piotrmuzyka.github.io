@@ -70,13 +70,31 @@
     .hud { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--color-surface-2); border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent); }
     .hud strong, .hud span, .legend { font-size: var(--text-sm); }
     .hud span, .legend { color: var(--color-text-muted); }
-    canvas#simCanvas { width: 100%; height: 100%; min-height: 620px; display: block; border-radius: calc(var(--radius-xl) - var(--space-4)); background: #77b9c9; border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+    canvas#simCanvas { width: 100%; height: 100%; min-height: 620px; display: block; border-radius: calc(var(--radius-xl) - var(--space-4)); background: transparent; border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
     .legend { display: flex; gap: var(--space-4); flex-wrap: wrap; }
     .legend-item { display: inline-flex; align-items: center; gap: .5rem; }
     .swatch { width: 14px; height: 14px; border-radius: 50%; }
-    .overlay { position: absolute; right: var(--space-6); bottom: var(--space-6); max-width: min(420px, calc(100% - 3rem)); background: color-mix(in srgb, var(--color-surface) 92%, transparent); border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); padding: var(--space-4); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
-    .overlay h3 { font-family: var(--font-display); font-size: var(--text-lg); margin-bottom: var(--space-2); }
-    .overlay p { color: var(--color-text-muted); font-size: var(--text-sm); max-width: 36ch; }
+    .overlay {
+      position: absolute;
+      left: 50%; bottom: 10px;
+      transform: translateX(-50%);
+      width: min(340px, calc(100% - 1.5rem));
+      background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+      padding: 8px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      pointer-events: auto;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .overlay.hiding { opacity: 0; pointer-events: none; }
+    @media (min-width: 640px) {
+      .overlay { left: auto; right: var(--space-4); bottom: var(--space-4); transform: none; width: min(320px, calc(100% - 2rem)); }
+    }
+    .overlay h3 { font-size: var(--text-sm); margin-bottom: 2px; font-family: var(--font-display); font-size: var(--text-lg); margin-bottom: var(--space-2); }
+    .overlay p { color: var(--color-text-muted); font-size: var(--text-xs); max-width: 40ch; margin: 0; line-height: 1.3; }
     .theme-toggle { width: 46px; height: 46px; border-radius: 50%; background: var(--color-surface-2); border: 1px solid var(--color-border); }
     .success-banner { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(7,14,19,.18); pointer-events: none; }
     .success-banner.show { display: flex; }
@@ -84,6 +102,7 @@
     .success-card strong { display: block; font-family: var(--font-display); font-size: clamp(1.4rem, 1.1rem + 1vw, 2.3rem); margin-bottom: .45rem; }
     @media (max-width: 1024px) { .app { grid-template-columns: 1fr; } .panel { order: 2; } .stage-wrap { order: 1; } }
     @media (max-width: 640px) { .app { padding: var(--space-4); gap: var(--space-4); } .panel, .stage-wrap { padding: var(--space-4); } canvas#simCanvas { min-height: 420px; } }
+      canvas#simCanvas { image-rendering: pixelated; image-rendering: crisp-edges; }
   </style>
 </head>
 <body>
@@ -98,164 +117,62 @@
         </svg>
         <div>
           <h1>Marina Row</h1>
-          <p data-i18n="brandSub">Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.</p>
+          <p>Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.</p>
         </div>
       </div>
 
       <div class="section">
-        <h2 data-i18n="telemetry">Telemetry</h2>
+        <h2>Telemetry</h2>
         <div class="stats">
-          <article class="stat"><div class="stat-label" data-i18n="boatSpeed">Boat speed</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
-          <article class="stat"><div class="stat-label" data-i18n="bridgeAngle">Bridge angle</div><div class="stat-value" id="angleValue">0°</div></article>
-          <article class="stat"><div class="stat-label" data-i18n="parkDist">Park distance</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
-          <article class="stat"><div class="stat-label" data-i18n="riverAssist">River assist</div><div class="stat-value" id="flowValue">Off</div></article>
+          <article class="stat"><div class="stat-label">Boat speed</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
+          <article class="stat"><div class="stat-label">Bridge angle</div><div class="stat-value" id="angleValue">0°</div></article>
+          <article class="stat"><div class="stat-label">Park distance</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
+          <article class="stat"><div class="stat-label">River assist</div><div class="stat-value" id="flowValue">Off</div></article>
         </div>
       </div>
 
       <div class="section controls">
-        <h2 data-i18n="controls">Controls</h2>
-        <div class="control-row"><span data-i18n="ctrl_w">Both oars forward</span><span class="keycap">W</span></div>
-        <div class="control-row"><span data-i18n="ctrl_s">Both oars backwards</span><span class="keycap">S</span></div>
-        <div class="control-row"><span data-i18n="ctrl_a">Left oar forward</span><span class="keycap">A</span></div>
-        <div class="control-row"><span data-i18n="ctrl_d">Right oar forward</span><span class="keycap">D</span></div>
-        <div class="control-row"><span data-i18n="ctrl_z">Left oar back / hold</span><span class="keycap">Z</span></div>
-        <div class="control-row"><span data-i18n="ctrl_c">Right oar back / hold</span><span class="keycap">C</span></div>
+        <h2>Controls</h2>
+        <div class="control-row"><span>Both oars forward</span><span class="keycap">W</span></div>
+        <div class="control-row"><span>Both oars backwards</span><span class="keycap">S</span></div>
+        <div class="control-row"><span>Left oar forward</span><span class="keycap">A</span></div>
+        <div class="control-row"><span>Right oar forward</span><span class="keycap">D</span></div>
+        <div class="control-row"><span>Left oar back / hold</span><span class="keycap">Z</span></div>
+        <div class="control-row"><span>Right oar back / hold</span><span class="keycap">C</span></div>
       </div>
 
       <div class="section">
-        <h2 data-i18n="waterSettings">Water settings</h2>
-        <label class="toggle-row" for="flowToggle"><span data-i18n="enableFlow">Enable river flow</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
-        <label class="toggle-row" for="sensitivityToggle"><span data-i18n="lowSens">Low turn sensitivity</span><input class="toggle" id="sensitivityToggle" type="checkbox" aria-label="Low turn sensitivity" /></label>
-        <label class="toggle-row" for="themeToggle"><span data-i18n="darkMode">Dark mode</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
-        <div class="toggle-row"><span data-i18n="language">Language</span><button class="btn btn-secondary" id="langToggle" style="min-height:36px;padding:.4rem .9rem;font-size:.85rem;font-weight:700;">🇵🇱 PL</button></div>
-        <div class="toggle-row"><span data-i18n="version">Version</span><button class="btn btn-secondary" id="versionToggle" style="min-height:36px;padding:.4rem .9rem;font-size:.85rem;font-weight:700;">v2 ▾</button></div>
+        <h2>Water settings</h2>
+        <label class="toggle-row" for="minesToggle"><span>💣 Miny wodne</span><input class="toggle" id="minesToggle" type="checkbox" /></label>
+        <label class="toggle-row" for="flowToggle"><span>Enable river flow</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
+        <label class="toggle-row" for="themeToggle"><span>Dark mode</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
       </div>
 
       <div class="section notes">
-        <h2 data-i18n="dockingTips">Docking tips</h2>
-        <p data-i18n="tip1">W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.</p>
-        <p data-i18n="tip2">Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.</p>
+        <h2>Docking tips</h2>
+        <p>W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.</p>
+        <p>Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.</p>
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" id="resetBtn" data-i18n="resetRun">Reset run</button>
-        <button class="btn btn-secondary" id="pauseBtn" data-i18n="pause">Pause</button>
+        <button class="btn btn-primary" id="resetBtn">Reset run</button>
+        <button class="btn btn-secondary" id="pauseBtn">Pause</button>
       </div>
     </aside>
 
     <section class="stage-wrap" id="game" aria-label="Game stage">
       <div class="hud">
-        <div><strong data-i18n="goalLabel">Goal:</strong> <span data-i18n="goalText">Park in the white box by the bridge with the boat at 355° to 5° relative to the bridge.</span></div>
+        <div><strong>Goal:</strong> <span>Wpłyń do białego obszaru przy moście równolegle do mostu (±5°) i zatrzymaj łódź.</span></div>
         <div class="legend">
-          <span class="legend-item"><span class="swatch" style="background:#d6c4a8"></span><span data-i18n="legendLand">Dock / land</span></span>
-          <span class="legend-item"><span class="swatch" style="background:#ffffff"></span><span data-i18n="legendBox">Parking box</span></span>
-          <span class="legend-item"><span class="swatch" style="background:#e06868"></span><span data-i18n="legendBuoy">Buoy / obstacle</span></span>
+          <span class="legend-item"><span class="swatch" style="background:#d6c4a8"></span>Dock / land</span>
+          <span class="legend-item"><span class="swatch" style="background:#ffffff"></span>Parking box</span>
+          <span class="legend-item"><span class="swatch" style="background:#e06868"></span>Buoy / obstacle</span>
         </div>
       </div>
       <canvas id="simCanvas" width="1280" height="840" aria-label="Top-down rowing simulator"></canvas>
-      <div class="overlay" id="messageBox"><h3>Park by the bridge</h3><p>Approach from open water, slow down, rotate the shell, and settle fully into the bridge-side parking box.</p></div>
+      <div class="overlay" id="messageBox"><h3>Przybij do pomostu</h3><p>Wpłyń do białego obszaru równolegle do mostu (±5°) i zatrzymaj łódź.</p></div>
       <div class="success-banner" id="successBanner"><div class="success-card"><strong>Gratulacje!</strong><span>Można wysiadać. ALE NIE WSZYSCY NARAZ!</span></div></div>
-      <!-- On-screen steering pad -->
-      <div id="steerPad" style="
-        position:absolute; bottom:1.4rem; right:1.4rem;
-        display:grid; grid-template-columns: repeat(3,52px); grid-template-rows: repeat(3,52px);
-        gap:5px; z-index:10; user-select:none;
-      ">
-        <!-- Row 1: fwd-left | forward | fwd-right -->
-        <button class="arrow-btn" id="btnFwdLeft" aria-label="Forward left oar" title="Left oar forward"
-          style="grid-column:1;grid-row:1">
-          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,3 22,21 2,21" fill="currentColor" opacity="0.5"/><line x1="4" y1="20" x2="4" y2="8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-        </button>
-        <button class="arrow-btn" id="btnUp" aria-label="Row forward"
-          style="grid-column:2;grid-row:1">
-          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,3 22,21 2,21" fill="currentColor"/></svg>
-        </button>
-        <button class="arrow-btn" id="btnFwdRight" aria-label="Forward right oar" title="Right oar forward"
-          style="grid-column:3;grid-row:1">
-          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,3 22,21 2,21" fill="currentColor" opacity="0.5"/><line x1="20" y1="20" x2="20" y2="8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-        </button>
-        <!-- Row 2: turn-left | (empty center) | turn-right -->
-        <button class="arrow-btn" id="btnLeft" aria-label="Turn left"
-          style="grid-column:1;grid-row:2">
-          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="3,12 21,2 21,22" fill="currentColor"/></svg>
-        </button>
-        <div style="grid-column:2;grid-row:2"></div>
-        <button class="arrow-btn" id="btnRight" aria-label="Turn right"
-          style="grid-column:3;grid-row:2">
-          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="21,12 3,2 3,22" fill="currentColor"/></svg>
-        </button>
-        <!-- Row 3: back-left | backward | back-right -->
-        <button class="arrow-btn" id="btnBkLeft" aria-label="Backward left oar" title="Left oar back"
-          style="grid-column:1;grid-row:3">
-          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,21 2,3 22,3" fill="currentColor" opacity="0.5"/><line x1="4" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-        </button>
-        <button class="arrow-btn" id="btnDown" aria-label="Row backward"
-          style="grid-column:2;grid-row:3">
-          <svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,21 2,3 22,3" fill="currentColor"/></svg>
-        </button>
-        <button class="arrow-btn" id="btnBkRight" aria-label="Backward right oar" title="Right oar back"
-          style="grid-column:3;grid-row:3">
-          <svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12,21 2,3 22,3" fill="currentColor" opacity="0.5"/><line x1="20" y1="4" x2="20" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-        </button>
-        <style>
-          .arrow-btn {
-            width:52px; height:52px; border-radius:12px;
-            background: rgba(10,20,40,0.72);
-            border: 1.5px solid rgba(255,255,255,0.22);
-            color: rgba(255,255,255,0.88);
-            display:flex; align-items:center; justify-content:center;
-            cursor:pointer; backdrop-filter:blur(6px);
-            transition: background 0.12s, transform 0.08s;
-            touch-action: none;
-          }
-          .arrow-btn:active, .arrow-btn.pressed {
-            background: rgba(1,105,111,0.85);
-            transform: scale(0.93);
-          }
-        </style>
-      </div>
     </section>
-  
-  <!-- Intro Screen -->
-  <div id="introScreen" style="
-    position:fixed; inset:0; z-index:9999;
-    display:flex; align-items:center; justify-content:center;
-    background:#05071a;
-    overflow:hidden;
-  ">
-    <canvas id="introCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-    <div id="introTitle" style="
-      position:relative; z-index:2;
-      font-family: 'Cabinet Grotesk', Impact, sans-serif;
-      font-size: clamp(3.5rem, 9vw, 8rem);
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      color: #ff1a1a;
-      text-shadow:
-        4px 4px 0px #7a0000,
-        8px 8px 0px #4a0000,
-        12px 12px 0px #200000,
-        0 0 40px #ff0000,
-        0 0 80px #aa0000;
-      user-select:none;
-      animation: introFlicker 0.12s infinite alternate;
-    ">ROWMAGEDDON
-      <!-- Blood drips SVG overlay -->
-      <svg id="bloodDrips" style="position:absolute;top:100%;left:0;width:100%;pointer-events:none;" height="90" viewBox="0 0 900 90" preserveAspectRatio="none"></svg>
-    </div>
-    <style>
-      @keyframes introFlicker {
-        from { filter: brightness(1) drop-shadow(0 0 18px #ff0000); }
-        to   { filter: brightness(1.08) drop-shadow(0 0 32px #ff4444); }
-      }
-      @keyframes drip {
-        0%   { transform: scaleY(0); transform-origin: top; opacity:1; }
-        80%  { transform: scaleY(1); transform-origin: top; opacity:1; }
-        100% { transform: scaleY(1); transform-origin: top; opacity:0.7; }
-      }
-    </style>
-  </div>
-
   </main>
 
   <script>
@@ -296,9 +213,62 @@
 
     flowToggle.addEventListener('change', () => riverFlowEnabled = flowToggle.checked);
     flowToggle.checked = true;
-    let lowSensitivity = false;
-    const sensitivityToggle = document.getElementById('sensitivityToggle');
-    sensitivityToggle.addEventListener('change', () => lowSensitivity = sensitivityToggle.checked);
+    const minesToggle = document.getElementById('minesToggle');
+    minesToggle.addEventListener('change', () => {
+      minesEnabled = minesToggle.checked;
+      mines = minesEnabled ? spawnMines() : [];
+    });
+    function spawnMines() {
+      return [{x:200,y:350},{x:380,y:310},{x:560,y:290},{x:720,y:370},
+              {x:870,y:305},{x:1020,y:345},{x:1110,y:415},{x:760,y:440},
+              {x:460,y:415},{x:310,y:425},{x:1160,y:305},{x:610,y:325}]
+        .filter(c=>Math.hypot(c.x-boat.x,c.y-boat.y)>160)
+        .map(c=>({x:c.x,y:c.y,r:14,bob:Math.random()*Math.PI*2,burning:false}));
+    }
+    function drawMines(ts) {
+      if (!minesEnabled) return;
+      mines.forEach(m => {
+        const bob=Math.sin(ts*0.0008+m.bob)*3;
+        ctx.save(); ctx.translate(m.x,m.y+bob);
+        if (m.burning) {
+          const fc=[['#ff4400','#ff8800','#ffcc00'],['#ff2200','#ff6600','#ffaa00']];
+          const tf=Math.floor(ts/120)%2;
+          ctx.fillStyle=fc[tf][0]; ctx.fillRect(-6,-14,12,12);
+          ctx.fillStyle=fc[tf][1]; ctx.fillRect(-8,-6,16,8);
+          ctx.fillStyle=fc[tf][2]; ctx.fillRect(-10,0,20,8);
+        } else {
+          ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(0,0,m.r,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='#444'; ctx.beginPath(); ctx.arc(0,0,m.r-3,0,Math.PI*2); ctx.fill();
+          [0,1,2,3,4,5,6,7].forEach(i=>{
+            const a=i/8*Math.PI*2;
+            ctx.fillStyle='#333';
+            ctx.beginPath(); ctx.arc(Math.cos(a)*(m.r+5),Math.sin(a)*(m.r+5),4,0,Math.PI*2); ctx.fill();
+          });
+          ctx.fillStyle='#ff2222'; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='#555';
+          for(let cy=m.r+2;cy<m.r+18;cy+=5) { ctx.fillRect(-2,cy,4,4); }
+        }
+        ctx.restore();
+      });
+    }
+    function checkMineCollision(ts) {
+      if (!minesEnabled||!mines.length||mineHitState) return;
+      const corners=getBoatCorners();
+      for(let i=mines.length-1;i>=0;i--){
+        const m=mines[i]; if(m.burning) continue;
+        let hit=Math.hypot(boat.x-m.x,boat.y-m.y)<m.r+22;
+        if(!hit) for(const p of corners) if(Math.hypot(p.x-m.x,p.y-m.y)<m.r+16){hit=true;break;}
+        if(hit){
+          mines[i].burning=true;
+          mineHitState={startTs:ts,mx:m.x,my:m.y};
+          boat.vx=0; boat.vy=0; boat.angularVelocity=0;
+          running=false;
+          showMessage('💥 BOOM! Mina!','Trafiłeś na minę! Resetowanie...');
+          setTimeout(()=>{ mineHitState=null; running=true; resetBoat(); if(minesEnabled) mines=spawnMines(); },2200);
+          break;
+        }
+      }
+    }
     resetBtn.addEventListener('click', resetBoat);
     pauseBtn.addEventListener('click', () => {
       running = !running;
@@ -310,24 +280,23 @@
     });
 
     const world = {
-      width: canvas.width,
-      height: canvas.height,
+      width: canvas.width, height: canvas.height,
       leftBank: [{x:0,y:840},{x:0,y:570},{x:380,y:560},{x:380,y:840},{x:580,y:840},{x:580,y:560},{x:1280,y:570},{x:1280,y:840}],
-      rightBank: [{x:0,y:0},{x:1280,y:0},{x:1280,y:220},{x:1100,y:200},{x:950,y:190},{x:820,y:240},{x:700,y:280},{x:600,y:270},{x:480,y:230},{x:340,y:205},{x:180,y:195},{x:0,y:210}],
-      marina: { x: 380, y: 580, w: 200, h: 140 },
-      dockWalls: [{x:362,y:560,w:18,h:280},{x:580,y:560,w:18,h:280}],
-      bridge: { x1: 380, y1: 560, x2: 380, y2: 840, angle: -1.5708, thickness: 40 },
-      berth: { x: 390, y: 590, w: 160, h: 200 },
-      hangar: { x: 80, y: 680, w: 140, h: 80 },
+      rightBank: [{x:0,y:0},{x:1280,y:0},{x:1280,y:210},{x:1100,y:200},{x:950,y:190},{x:820,y:240},{x:700,y:280},{x:600,y:270},{x:480,y:230},{x:340,y:205},{x:180,y:195},{x:0,y:210}],
+      marina: {x:390,y:580,w:180,h:230},
+      dockWalls: [{x:362,y:560,w:20,h:282},{x:578,y:560,w:20,h:282}],
+      bridge: {x1:380,y1:560,x2:380,y2:840,angle:-1.5708,thickness:40},
+      berth: {x:390,y:580,w:170,h:220},
+      hangar: {x:60,y:620,w:140,h:80},
       buoys: [],
-      flow: { x: -28, y: 0 }
+      flow: {x:-28,y:0}
     };
-
     const boat = {
       x: 900, y: 390,
       angle: 3.14159,
       vx: 0, vy: 0, angularVelocity: 0,
-      length: 86, width: 20,
+      length: 120, width: 20,
+      oarAnim: {portPhase:0,starPhase:0,portActive:0,starActive:0},
       maxStroke: 65,
       drag: 0.992,
       waterDrag: 0.995,
@@ -336,6 +305,9 @@
     const startState = { x: boat.x, y: boat.y, angle: boat.angle };
     let win = false;
     let crashCooldown = 0;
+    let mineHitState = null;
+    let minesEnabled = false;
+    let mines = [];
     let lastTs = performance.now();
     let confetti = [];
 
@@ -344,13 +316,23 @@
       boat.vx = 0; boat.vy = 0; boat.angularVelocity = 0;
       running = true; win = false; crashCooldown = 0; confetti = [];
       successBanner.classList.remove('show');
+      mineHitState = null;
       pauseBtn.textContent = 'Pause';
       showMessage('Fresh attempt', 'Tap W, S, A, and D for individual strokes. Use short correction taps and settle into the bridge-side box nearly parallel to the bridge.');
     }
 
     function showMessage(title, body) {
-      messageBox.innerHTML = `<h3>${title}</h3><p>${body}</p>`;
+      messageBox.innerHTML = `<h3>${title}</h3><p>${body}</p><span style="position:absolute;top:6px;right:10px;font-size:14px;opacity:0.5;">✕</span>`;
+      messageBox.classList.remove('hiding');
+      messageBox.style.opacity = '1';
+      clearTimeout(messageBox._timer);
+      messageBox._timer = setTimeout(() => {
+        messageBox.classList.add('hiding');
+      }, 4000);
     }
+    document.addEventListener('DOMContentLoaded', () => {
+      messageBox.addEventListener('click', () => messageBox.classList.add('hiding'));
+    });
 
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
     function wrapAngle(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
@@ -384,20 +366,13 @@
         tapped[name] = true;
         const forward = { x: Math.cos(boat.angle), y: Math.sin(boat.angle) };
         const total = portImpulse + starImpulse;
-        const sensMult = lowSensitivity ? 0.4 : 1.0;
-        const yaw = (starImpulse - portImpulse) * 0.018 * sensMult;
+        const yaw = (starImpulse - portImpulse) * 0.018;
         boat.vx += forward.x * total * 0.46;
         boat.vy += forward.y * total * 0.46;
         boat.angularVelocity += yaw;
+      if(portImpulse!==0){boat.oarAnim.portPhase=0;boat.oarAnim.portActive=portImpulse>0?1:-1;}
+      if(starImpulse!==0){boat.oarAnim.starPhase=0;boat.oarAnim.starActive=starImpulse>0?1:-1;}
       }
-    }
-
-    function pointOnBridge(p) {
-      // Bridge is a thick VERTICAL line on the left wall of the T inlet
-      const bx = world.bridge.x1;
-      const by1 = world.bridge.y1, by2 = world.bridge.y2;
-      const half = world.bridge.thickness / 2 + 2;
-      return p.x >= bx - half && p.x <= bx + half && p.y >= by1 && p.y <= by2;
     }
 
     function handleCollision() {
@@ -405,31 +380,18 @@
       let hit = false;
       for (const p of corners) {
         if (pointInPolygon(p, world.leftBank) || pointInPolygon(p, world.rightBank)) hit = true;
-        if (pointOnBridge(p)) hit = true;
         for (const wall of world.dockWalls) if (rectCollision(wall, p)) hit = true;
         for (const buoy of world.buoys) {
           const dx = p.x - buoy.x, dy = p.y - buoy.y;
           if (dx * dx + dy * dy < (buoy.r + 8) * (buoy.r + 8)) hit = true;
         }
       }
-      if (hit) {
-        // Always push back - solid collision
-        boat.vx *= -0.35; boat.vy *= -0.35; boat.angularVelocity *= -0.4;
-        boat.x += Math.cos(boat.angle + Math.PI) * 10;
-        boat.y += Math.sin(boat.angle + Math.PI) * 10;
-        // Extra push: move away from each colliding bank polygon
-        for (const p of corners) {
-          if (pointInPolygon(p, world.leftBank)) { boat.x += 6; }
-          if (pointInPolygon(p, world.rightBank)) { boat.x -= 6; }
-          if (pointOnBridge(p)) {
-            // push away from bridge (downward = positive y)
-            boat.y += (p.y < world.bridge.y1) ? -8 : 8;
-          }
-        }
-        if (crashCooldown <= 0) {
-          crashCooldown = 0.7;
-          showMessage('Contact', 'You clipped a bank, bridge, pontoon, or buoy. Slow down and steer away.');
-        }
+      if (hit && crashCooldown <= 0) {
+        boat.vx *= -0.28; boat.vy *= -0.28; boat.angularVelocity *= -0.4;
+        boat.x += Math.cos(boat.angle + Math.PI) * 8;
+        boat.y += Math.sin(boat.angle + Math.PI) * 8;
+        crashCooldown = 0.7;
+        showMessage('Contact', 'You clipped a bank, bridge area, pontoon, or buoy. Reset your angle and approach more slowly.');
       }
     }
 
@@ -439,29 +401,27 @@
 
       pulseStroke('w', boat.maxStroke, boat.maxStroke);
       pulseStroke('s', -boat.maxStroke * 0.92, -boat.maxStroke * 0.92);
-      pulseStroke('a', boat.maxStroke * 0.38, 0);
-      pulseStroke('d', 0, boat.maxStroke * 0.38);
+      pulseStroke('a', boat.maxStroke * 0.72, 0);
+      pulseStroke('d', 0, boat.maxStroke * 0.72);
 
       if (keys.has('a') && keys.has('z')) {
-        boat.angularVelocity -= (lowSensitivity ? 0.5 : 1.18) * dt;
+        boat.angularVelocity -= 1.18 * dt;
         boat.vx *= 0.992;
         boat.vy *= 0.992;
       } else if (keys.has('z')) {
-        // backwards left: reverse thrust + turn left
-        boat.vx -= forward.x * boat.maxStroke * dt * 0.22;
-        boat.vy -= forward.y * boat.maxStroke * dt * 0.22;
-        boat.angularVelocity -= (lowSensitivity ? 0.9 : 2.2) * dt;
+        boat.vx -= forward.x * boat.maxStroke * dt * 0.18;
+        boat.vy -= forward.y * boat.maxStroke * dt * 0.18;
+        boat.angularVelocity -= 0.35 * dt;
       }
 
       if (keys.has('d') && keys.has('c')) {
-        boat.angularVelocity += (lowSensitivity ? 0.5 : 1.18) * dt;
+        boat.angularVelocity += 1.18 * dt;
         boat.vx *= 0.992;
         boat.vy *= 0.992;
       } else if (keys.has('c')) {
-        // backwards right: reverse thrust + turn right
-        boat.vx -= forward.x * boat.maxStroke * dt * 0.22;
-        boat.vy -= forward.y * boat.maxStroke * dt * 0.22;
-        boat.angularVelocity += (lowSensitivity ? 0.9 : 2.2) * dt;
+        boat.vx -= forward.x * boat.maxStroke * dt * 0.18;
+        boat.vy -= forward.y * boat.maxStroke * dt * 0.18;
+        boat.angularVelocity += 0.35 * dt;
       }
 
       const velForward = boat.vx * forward.x + boat.vy * forward.y;
@@ -493,6 +453,7 @@
       boat.y = clamp(boat.y, 20, world.height - 20);
 
       handleCollision();
+      checkMineCollision(performance.now());
       if (crashCooldown > 0) crashCooldown -= dt;
       checkWin();
       updateTelemetry();
@@ -518,6 +479,7 @@
       const speed = Math.hypot(boat.vx, boat.vy);
       const bridgeDeg = ((boat.angle - world.bridge.angle) * 180 / Math.PI + 360) % 360;
       const inZone = boat.x > world.berth.x && boat.x < world.berth.x + world.berth.w && boat.y > world.berth.y && boat.y < world.berth.y + world.berth.h;
+      // Bridge is vertical (-π/2). Parallel = bridgeDeg near 0/360 or 180, within ±5°
       const aligned = (bridgeDeg >= 355 || bridgeDeg <= 5) || (bridgeDeg >= 175 && bridgeDeg <= 185);
       if (!win && inZone && aligned && speed < 14) {
         win = true;
@@ -525,7 +487,7 @@
         pauseBtn.textContent = 'Resume';
         successBanner.classList.add('show');
         launchConfetti();
-        showMessage('Wow, brawo wioślarzu!', 'Perfekcyjne parkowanie, Pani trener byłaby zadowolona!');
+        showMessage('Gratulacje!', 'Można wysiadać. ALE NIE WSZYSCY NARAZ!');
       }
       distanceValue.textContent = `${(dist / 22).toFixed(1)} m`;
       angleValue.textContent = `${Math.round(bridgeDeg)}°`;
@@ -546,70 +508,79 @@
     }
 
     function drawWater() {
-      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, '#97d1df');
-      grad.addColorStop(0.45, '#69b4c5');
-      grad.addColorStop(1, '#4d98ab');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.globalAlpha = 0.14;
-      for (let y = 0; y < canvas.height; y += 34) {
-        ctx.beginPath();
-        for (let x = 0; x <= canvas.width; x += 24) {
-          const wave = Math.sin((x + performance.now() * 0.045 + y) * 0.02) * 3.5;
-          if (x === 0) ctx.moveTo(x, y + wave);
-          else ctx.lineTo(x, y + wave);
+      const T=16, ts=Math.floor(performance.now()/450)%2;
+      for(let x=0;x<canvas.width;x+=T){
+        for(let y=0;y<canvas.height;y+=T){
+          const phase=(Math.floor(x/T)+Math.floor(y/T)+ts)%2;
+          ctx.fillStyle=phase===0?'#1a6ea8':'#1557a0';
+          ctx.fillRect(x,y,T,T);
+          if((Math.floor(x/T)+Math.floor(y/T))%4===0){
+            ctx.fillStyle='#2288cc'; ctx.fillRect(x+2,y+2,5,3);
+          }
         }
-        ctx.strokeStyle = 'rgba(255,255,255,.6)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
       }
-      ctx.globalAlpha = 1;
     }
 
     function drawBanks() {
-      drawPolygon(world.leftBank, '#ccb48c');
-      drawPolygon(world.rightBank, '#ccb48c');
-      ctx.fillStyle = '#f8fbfd';
-      ctx.beginPath();
-      ctx.arc(startState.x, startState.y, 7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#18343b';
-      ctx.font = '700 16px Satoshi, sans-serif';
-      ctx.fillText('START', startState.x + 12, startState.y + 5);
-      // River label
-      ctx.globalAlpha = 0.38;
-      ctx.fillStyle = '#1a5a6e';
-      ctx.font = 'italic 700 28px Satoshi, sans-serif';
-      ctx.fillText('Odra', 550, 400);
-      ctx.fillText('Odra', 1000, 390);
-      ctx.globalAlpha = 1;
-    }
+      // Land fill (flat pixel colour)
+      ctx.fillStyle='#5a8c3a';
+      ctx.fillRect(0,0,canvas.width,210);    // north
+      ctx.fillRect(0,560,380,280);           // south-left
+      ctx.fillRect(580,560,700,280);         // south-right
 
-    function drawClubBuildings() {
-      // Rowing club buildings on south bank (bottom-left)
-      ctx.fillStyle = '#d4cfc8';
-      ctx.fillRect(80,  690, 140, 80);    // main building
-      ctx.fillStyle = '#bfbab2';
-      ctx.fillRect(170, 678, 60, 26);     // annex
-      ctx.fillStyle = '#a09890';
-      ctx.fillRect(80,  750, 50, 26);     // shed
-      // Trees along north bank
-      const treeColor2 = ['#4a7c45','#3d6b3a','#5a8f52'];
-      [{x:700,y:260},{x:760,y:245},{x:820,y:255},{x:880,y:240},{x:940,y:210},{x:1000,y:200},{x:1060,y:215}]
-        .forEach((t,i)=>{ ctx.fillStyle=treeColor2[i%3]; ctx.beginPath(); ctx.arc(t.x,t.y,16,0,Math.PI*2); ctx.fill(); });
-      // Wooded north bank island tufts
-      const treeColor = ['#4a7c45','#3d6b3a','#5a8f52'];
-      const trees = [
-        {x:780,y:260},{x:820,y:240},{x:860,y:270},{x:900,y:250},
-        {x:950,y:210},{x:1000,y:185},{x:1050,y:175},{x:1100,y:195}
-      ];
-      trees.forEach((t,i)=>{
-        ctx.fillStyle = treeColor[i%3];
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, 18+Math.sin(i)*5, 0, Math.PI*2);
-        ctx.fill();
+      // Darker border strip (1 tile = 8px)
+      ctx.fillStyle='#3d6b22';
+      ctx.fillRect(0,202,canvas.width,8);    // north bottom edge
+      ctx.fillRect(0,560,380,8);             // south-left top
+      ctx.fillRect(580,560,700,8);           // south-right top
+      ctx.fillRect(374,560,8,264);           // left inlet wall
+      ctx.fillRect(578,560,8,264);           // right inlet wall
+
+      // Dither strip (checkerboard) along water edges
+      ctx.fillStyle='#6aaa40';
+      for(let x=0;x<canvas.width;x+=16){
+        if(Math.floor(x/16)%2===0){ ctx.fillRect(x,194,8,8); ctx.fillRect(x,552,8,8); }
+        else { ctx.fillRect(x+8,194,8,8); ctx.fillRect(x+8,552,8,8); }
+      }
+
+      // Pixel trees (3-block sprite: trunk + canopy + top)
+      [[780,150],[840,130],[900,148],[960,115],[1020,105],[1080,118],[640,130],[700,140]].forEach(([tx,ty])=>{
+        ctx.fillStyle='#5a3a1a'; ctx.fillRect(tx-4,ty+24,8,16);   // trunk
+        ctx.fillStyle='#2d6e1a'; ctx.fillRect(tx-14,ty+8,28,20);  // lower canopy
+        ctx.fillStyle='#3d8a22'; ctx.fillRect(tx-10,ty-2,20,14);  // mid canopy
+        ctx.fillStyle='#50a82e'; ctx.fillRect(tx-6,ty-12,12,14);  // top
+        ctx.fillStyle='#6dc23e'; ctx.fillRect(tx-4,ty-14,8,6);    // highlight
       });
+
+      // Pixel buildings south bank
+      [[60,590,80,70,'#c8b89a','#a09070'],[150,600,60,55,'#b8a888','#907860'],
+       [220,595,90,65,'#d0c0a0','#b09878']].forEach(([x,y,w,h,f,r])=>{
+        ctx.fillStyle=f; ctx.fillRect(x,y,w,h);
+        ctx.fillStyle=r; ctx.fillRect(x,y,w,8);  // roof
+        // pixel windows
+        ctx.fillStyle='#88ccee';
+        ctx.fillRect(x+8,y+16,12,10); ctx.fillRect(x+w-20,y+16,12,10);
+        ctx.fillStyle='#3a3a3a'; ctx.strokeRect(x,y,w,h);
+      });
+
+      // Pixel bushes along north bank
+      for(let bx=30;bx<canvas.width-30;bx+=48){
+        ctx.fillStyle=(bx/48)%2===0?'#2d6e1a':'#3d8a22';
+        ctx.fillRect(bx,195,16,10);
+      }
+
+      // Odra label (pixel style, monospace)
+      ctx.fillStyle='rgba(180,230,255,0.5)';
+      ctx.font='bold 18px "Courier New",monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('~ ODRA ~',580,390);
+      ctx.fillText('~ ODRA ~',1020,370);
+
+      // START marker
+      ctx.fillStyle='#ffee00'; ctx.fillRect(892,382,16,16);
+      ctx.fillStyle='#000';
+      ctx.font='bold 11px "Courier New",monospace';
+      ctx.textAlign='left'; ctx.fillText('START',912,390);
     }
 
     function drawFlow() {
@@ -633,71 +604,37 @@
     }
 
     function drawBridgeAndDock() {
-      // T-inlet: draw the two land walls and the bridge at the bottom
-      ctx.fillStyle = '#ccb48c';
-      ctx.fillRect(362, 558, 20, 282);   // left inlet wall (land)
-      ctx.fillRect(578, 558, 20, 282);   // right inlet wall (land)
-
-      ctx.strokeStyle = '#7a5632';
-      ctx.lineWidth = world.bridge.thickness;
-      ctx.lineCap = 'butt';
-      ctx.beginPath();
-      ctx.moveTo(world.bridge.x1, world.bridge.y1);
-      ctx.lineTo(world.bridge.x2, world.bridge.y2);
-      ctx.stroke();
-      ctx.strokeStyle = '#9c7446';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(world.bridge.x1 + 3, world.bridge.y1);
-      ctx.lineTo(world.bridge.x2 + 3, world.bridge.y2);
-      ctx.stroke();
-
-      const people = [
-        {x:380,y:610,balloon:'#ff6b6b'}, {x:380,y:660,balloon:'#ffd166'}, {x:380,y:710,balloon:'#6ecbff'},
-        {x:380,y:760,balloon:'#a87cff'}, {x:380,y:810,balloon:'#7bd389'}
-      ];
-      for (const p of people) {
-        ctx.strokeStyle = '#2f2419';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y - 10); ctx.lineTo(p.x, p.y + 6); ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y - 2); ctx.lineTo(p.x - 5, p.y + 7); ctx.moveTo(p.x, p.y - 2); ctx.lineTo(p.x + 5, p.y + 7); ctx.stroke();
-        ctx.beginPath(); ctx.arc(p.x, p.y - 14, 4, 0, Math.PI * 2); ctx.fillStyle = '#f4d7c3'; ctx.fill();
-        ctx.beginPath(); ctx.moveTo(p.x, p.y - 18); ctx.lineTo(p.x + 12, p.y - 38); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.2; ctx.stroke();
-        ctx.beginPath(); ctx.arc(p.x + 16, p.y - 44, 8, 0, Math.PI * 2); ctx.fillStyle = p.balloon; ctx.fill();
+      // Inlet side walls (pixel-tiled)
+      for(let py=560;py<840;py+=16){
+        ctx.fillStyle=Math.floor(py/16)%2===0?'#8b6020':'#7a5518';
+        ctx.fillRect(362,py,20,16);
+        ctx.fillRect(578,py,20,16);
       }
+      // Highlight stripe on bridge walls
+      ctx.fillStyle='#c8902a';
+      ctx.fillRect(362,558,4,284); ctx.fillRect(394,558,4,284);
+      ctx.fillRect(578,558,4,284); ctx.fillRect(610,558,4,284);
 
-      const h = world.hangar;
-      ctx.fillStyle = '#f5f6f7';
-      ctx.fillRect(h.x, h.y, h.w, h.h);
-      ctx.fillStyle = '#cfd7de';
-      ctx.beginPath();
-      ctx.moveTo(h.x - 8, h.y); ctx.lineTo(h.x + h.w/2, h.y - 24); ctx.lineTo(h.x + h.w + 8, h.y); ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#97a7b3';
-      ctx.fillRect(h.x + 18, h.y + 30, 42, 48);
-      ctx.fillRect(h.x + 70, h.y + 30, 42, 48);
-      ctx.fillRect(h.x + 122, h.y + 30, 30, 48);
-      ctx.fillStyle = '#17313a';
-      ctx.font = '700 19px Satoshi, sans-serif';
-      ctx.fillText('Hangar AZS', h.x + 26, h.y + 22);
-
-      ctx.fillStyle = '#d8c2a3';
-      for (const wall of world.dockWalls) ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-      ctx.fillStyle = 'rgba(255,255,255,.95)';
-      ctx.fillRect(world.berth.x, world.berth.y, world.berth.w, world.berth.h);
-      ctx.strokeStyle = 'rgba(1,105,111,.95)';
-      ctx.lineWidth = 3;
+      // Berth dashed box
+      ctx.strokeStyle='rgba(255,255,255,0.95)'; ctx.lineWidth=3;
       ctx.setLineDash([10,8]);
-      ctx.strokeRect(world.berth.x, world.berth.y, world.berth.w, world.berth.h);
+      ctx.strokeRect(world.berth.x,world.berth.y,world.berth.w,world.berth.h);
       ctx.setLineDash([]);
-      for (const buoy of world.buoys) {
-        ctx.beginPath();
-        ctx.arc(buoy.x, buoy.y, buoy.r, 0, Math.PI * 2);
-        ctx.fillStyle = '#e06868';
-        ctx.fill();
-      }
+      ctx.fillStyle='rgba(255,255,180,0.07)';
+      ctx.fillRect(world.berth.x,world.berth.y,world.berth.w,world.berth.h);
+
+      // DOCK label
+      ctx.fillStyle='#ffee00';
+      ctx.font='bold 11px "Courier New",monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('POMOST',world.berth.x+world.berth.w/2,world.berth.y-12);
+
+      // Spectators on bridge (pixel people)
+      [620,650,680,710,740,770,800].forEach(py=>{
+        ctx.fillStyle='#f4d7c3'; ctx.fillRect(369,py-12,6,6);   // head
+        ctx.fillStyle=['#e06868','#6ea9d9','#7bd389','#ffd166'][Math.floor(py/10)%4];
+        ctx.fillRect(367,py-6,8,10);  // body
+      });
     }
 
     function drawHUDGuide() {
@@ -732,35 +669,70 @@
     }
 
     function drawBoat() {
-      ctx.save();
-      ctx.translate(boat.x, boat.y);
-      ctx.rotate(boat.angle);
-      ctx.strokeStyle = 'rgba(20,20,20,.24)';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(-boat.length * 0.2, 0);
-      ctx.lineTo(-boat.length * 0.62, 0);
-      ctx.stroke();
-      ctx.fillStyle = '#f3efe5';
-      ctx.strokeStyle = '#40352b';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(boat.length / 2, 0);
-      ctx.quadraticCurveTo(boat.length * 0.15, boat.width * 0.72, -boat.length / 2, boat.width / 2);
-      ctx.lineTo(-boat.length * 0.47, 0);
-      ctx.lineTo(-boat.length / 2, -boat.width / 2);
-      ctx.quadraticCurveTo(boat.length * 0.15, -boat.width * 0.72, boat.length / 2, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = '#14323a';
-      ctx.beginPath();
-      ctx.arc(-6, 0, 6, 0, Math.PI * 2);
-      ctx.fill();
-      const portActive = keys.has('a') || keys.has('z') || keys.has('w') || keys.has('s');
-      const starActive = keys.has('d') || keys.has('c') || keys.has('w') || keys.has('s');
-      drawOar(-1, portActive, keys.has('z') || keys.has('s'));
-      drawOar(1, starActive, keys.has('c') || keys.has('s'));
+      const oa=boat.oarAnim, L=boat.length, W=10, S=5;
+      if(oa.portActive!==0){oa.portPhase=Math.min(oa.portPhase+0.016*S,1);if(oa.portPhase>=1)oa.portActive=0;}
+      if(oa.starActive!==0){oa.starPhase=Math.min(oa.starPhase+0.016*S,1);if(oa.starPhase>=1)oa.starActive=0;}
+      function sw(ph,ac){return ac===0?-0.18:ac>0?-0.5+ph:0.5-ph;}
+      const ps=sw(oa.portPhase,oa.portActive), ss=sw(oa.starPhase,oa.starActive);
+      ctx.save(); ctx.translate(boat.x,boat.y); ctx.rotate(boat.angle);
+
+      // Pixel oars: 2 pairs, each pair port+star at same x position
+      // pair 0: sx=-L*0.18 (port side=1, star side=-1)
+      // pair 1: sx=+L*0.18 (port side=1, star side=-1)
+      [[-L*0.18,1],[-L*0.18,-1],[L*0.18,1],[L*0.18,-1]].forEach(([sx,side])=>{
+        const sweep=side>0?ss:ps, ang=side*Math.PI/2+sweep;
+        const x0=sx+Math.cos(ang)*(-14), y0=Math.sin(ang)*(-14);
+        const x1=sx+Math.cos(ang)*42, y1=Math.sin(ang)*42;
+        ctx.strokeStyle='#e8d88a'; ctx.lineWidth=4; ctx.lineCap='square';
+        ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+        // blade: pixel rectangle
+        ctx.save(); ctx.translate(x1,y1); ctx.rotate(ang);
+        ctx.fillStyle='#2255dd'; ctx.fillRect(-5,0,10,12);
+        ctx.fillStyle='#4477ff'; ctx.fillRect(-3,0,6,5);
+        ctx.restore();
+      });
+
+      // Hull shadow
+      ctx.fillStyle='rgba(0,0,0,0.25)';
+      ctx.fillRect(-L/2+3, -W+3, L, W*2);
+
+      // Main hull (pixel rectangle)
+      ctx.fillStyle='#f0ece2';
+      ctx.fillRect(-L/2, -W, L, W*2);
+
+      // Red bow block
+      ctx.fillStyle='#cc2233';
+      ctx.fillRect(L*0.22, -W, L*0.28, W*2);
+
+      // Red stern block
+      ctx.fillStyle='#cc2233';
+      ctx.fillRect(-L/2, -W, L*0.22, W*2);
+
+      // Bow tip (pixel triangle via fillRect steps)
+      ctx.fillStyle='#cc2233';
+      ctx.fillRect(L/2-2,-6,6,12);
+      ctx.fillRect(L/2+2,-4,4,8);
+      ctx.fillRect(L/2+4,-2,4,4);
+
+      // Dark outline
+      ctx.strokeStyle='#222'; ctx.lineWidth=2; ctx.lineCap='square';
+      ctx.strokeRect(-L/2,-W,L,W*2);
+
+      // Centre stripe
+      ctx.fillStyle='#d4d0c6'; ctx.fillRect(-L*0.2,-2,L*0.4,4);
+
+      // 4 pixel rowers
+      [-L*0.18,L*0.18].forEach(sx=>{
+        ctx.fillStyle='#cc2233'; ctx.fillRect(sx-5,-W+2,10,W*2-4);
+        ctx.fillStyle='#ffcc88'; ctx.fillRect(sx-3,-W+2,6,6);
+        ctx.fillStyle='#222';    ctx.fillRect(sx-3,-W+2,6,3);
+      });
+
+      // Crash flash
+      if(crashCooldown>0.3){
+        ctx.fillStyle='rgba(255,50,50,0.45)';
+        ctx.fillRect(-L/2,-W,L,W*2);
+      }
       ctx.restore();
     }
 
@@ -784,12 +756,37 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawWater();
       drawBanks();
-      drawClubBuildings();
       drawFlow();
       drawBridgeAndDock();
       drawHUDGuide();
       drawBoat();
+      drawMines(performance.now());
       drawConfetti();
+
+      if (mineHitState) {
+        const age = performance.now() - mineHitState.startTs;
+        if (age < 2200) {
+          const t = age / 2200;
+          if (age < 350) {
+            ctx.beginPath(); ctx.arc(mineHitState.mx,mineHitState.my,age*0.28,0,Math.PI*2);
+            ctx.strokeStyle='rgba(255,200,50,'+(1-age/350)+')'; ctx.lineWidth=10; ctx.stroke();
+          }
+          const count = Math.floor(t * 70);
+          for (let f=0;f<count;f++) {
+            const fx = t<0.3 ? mineHitState.mx+(Math.random()-.5)*age*0.55 : Math.random()*canvas.width;
+            const fy = t<0.3 ? mineHitState.my+(Math.random()-.5)*age*0.55 : Math.random()*canvas.height;
+            ctx.fillStyle=['#ff4400','#ff8800','#ffcc00','#ff2200'][Math.floor(Math.random()*4)];
+            ctx.fillRect(fx,fy,14+Math.random()*14,14+Math.random()*14);
+          }
+          if (t > 0.25) {
+            const bt=(t-0.25)/0.75;
+            const g=ctx.createRadialGradient(canvas.width/2,canvas.height/2,0,canvas.width/2,canvas.height/2,canvas.width*Math.max(0.05,1-bt*0.95));
+            g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(0.5,'rgba(5,1,0,'+(bt*0.7)+')'); g.addColorStop(1,'rgba(0,0,0,'+bt+')');
+            ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+          }
+          if (t > 0.85) { ctx.fillStyle='rgba(0,0,0,'+((t-0.85)/0.15)+')'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+        }
+      }
     }
 
     function loop(ts) {
@@ -803,221 +800,6 @@
     resetBoat();
     render();
     requestAnimationFrame((ts) => { lastTs = ts; loop(ts); });
-  
-
-    // ===== LANGUAGE / i18n =====
-    const i18n = {
-      en: {
-        brandSub: "Single scull bridge-side parking challenge with visible top-down navigation, single-shot strokes, and optional river flow.",
-        telemetry: "Telemetry", controls: "Controls", waterSettings: "Water settings",
-        dockingTips: "Docking tips", boatSpeed: "Boat speed", bridgeAngle: "Bridge angle",
-        parkDist: "Park distance", riverAssist: "River assist",
-        ctrl_w: "Both oars forward", ctrl_s: "Both oars backwards",
-        ctrl_a: "Left oar forward", ctrl_d: "Right oar forward",
-        ctrl_z: "Left oar back / hold", ctrl_c: "Right oar back / hold",
-        enableFlow: "Enable river flow", lowSens: "Low turn sensitivity",
-        darkMode: "Dark mode", language: "Language", version: "Version",
-        tip1: "W and S are single clean strokes, so tap them to move. A and D also fire only one single one-sided stroke per press.",
-        tip2: "Use Z or C for backward correction, and alternate taps rather than holding A or D for steering.",
-        resetRun: "Reset run", pause: "Pause", resume: "Resume",
-        goalLabel: "Goal:", goalText: "Park in the white box by the bridge with the boat at 355°–5° or 175°–185°.",
-        legendLand: "Dock / land", legendBox: "Parking box", legendBuoy: "Buoy / obstacle",
-        contactTitle: "Contact", contactBody: "You clipped a bank, bridge, pontoon, or buoy. Slow down and steer away.",
-        freshTitle: "Fresh attempt", freshBody: "Tap W, S, A, and D for individual strokes. Use short correction taps and settle into the bridge-side box nearly parallel to the bridge.",
-        winTitle: "Gratulacje!", winBody: "Można wysiadać. ALE NIE WSZYSCY NARAZ!",
-        startLabel: "START"
-      },
-      pl: {
-        brandSub: "Wyzwanie parkowania przy moście — widok z góry, pojedyncze pociągnięcia wiosłem, opcjonalny prąd rzeki.",
-        telemetry: "Telemetria", controls: "Sterowanie", waterSettings: "Ustawienia wody",
-        dockingTips: "Wskazówki cumowania", boatSpeed: "Prędkość łodzi", bridgeAngle: "Kąt do mostu",
-        parkDist: "Odległość od boksu", riverAssist: "Prąd rzeki",
-        ctrl_w: "Oba wiosła do przodu", ctrl_s: "Oba wiosła do tyłu",
-        ctrl_a: "Lewe wiosło do przodu", ctrl_d: "Prawe wiosło do przodu",
-        ctrl_z: "Lewe wiosło wstecz / trzymaj", ctrl_c: "Prawe wiosło wstecz / trzymaj",
-        enableFlow: "Włącz prąd rzeki", lowSens: "Niska czułość skrętu",
-        darkMode: "Tryb ciemny", language: "Język", version: "Wersja",
-        tip1: "W i S to pojedyncze pociągnięcia — stukaj je aby się poruszać. A i D też wiosłują jednostronnie przy każdym naciśnięciu.",
-        tip2: "Używaj Z lub C do korekty wstecznej, i na zmianę stukaj zamiast trzymać A lub D przy sterowaniu.",
-        resetRun: "Resetuj", pause: "Pauza", resume: "Wznów",
-        goalLabel: "Cel:", goalText: "Zaparkuj w białym boksie przy moście pod kątem 355°–5° lub 175°–185°.",
-        legendLand: "Nabrzeże / ląd", legendBox: "Boks parkingowy", legendBuoy: "Boja / przeszkoda",
-        contactTitle: "Kontakt!", contactBody: "Zahaczyłeś o brzeg, most, pomost lub boję. Zwolnij i zmień kurs.",
-        freshTitle: "Nowa próba", freshBody: "Stukaj W, S, A i D dla pojedynczych pociągnięć. Delikatnie koryguj i wpłyń równolegle do mostu.",
-        winTitle: "Gratulacje!", winBody: "Można wysiadać. ALE NIE WSZYSCY NARAZ!",
-        startLabel: "START"
-      }
-    };
-    let currentLang = 'pl';
-
-    function applyLang(lang) {
-      currentLang = lang;
-      const t = i18n[lang];
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (t[key] !== undefined) el.textContent = t[key];
-      });
-      // Update pause/resume button correctly
-      const pb = document.getElementById('pauseBtn');
-      if (pb) pb.textContent = running ? t.pause : t.resume;
-      document.getElementById('langToggle').textContent = lang === 'en' ? '🇵🇱 PL' : '🇬🇧 EN';
-    }
-
-    const langToggleBtn = document.getElementById('langToggle');
-    langToggleBtn.addEventListener('click', () => {
-      applyLang(currentLang === 'en' ? 'pl' : 'en');
-    });
-    // Apply Polish on startup
-    applyLang('pl');
-
-    // showMessage is already defined as a regular function above - no override needed
-
-    // ===== VERSION SWITCHER =====
-    const versions = [
-      { label: 'v2 (current)', url: null },
-      { label: 'v1 (original)', url: 'rowmageddon.html' }
-    ];
-    let vIdx = 0;
-    const vBtn = document.getElementById('versionToggle');
-    vBtn.addEventListener('click', () => {
-      vIdx = (vIdx + 1) % versions.length;
-      const v = versions[vIdx];
-      vBtn.textContent = v.label + ' ▾';
-      if (v.url) {
-        if (confirm('Switch to ' + v.label + '? This will navigate away.')) {
-          window.location.href = v.url;
-        } else {
-          vIdx = 0;
-          vBtn.textContent = versions[0].label + ' ▾';
-        }
-      } else {
-        vBtn.textContent = versions[0].label + ' ▾';
-      }
-    });
-
-
-    // ===== ON-SCREEN STEERING BUTTONS =====
-    (function() {
-      const btnMap = {
-        btnUp:       'w',
-        btnDown:     's',
-        btnLeft:     'a',
-        btnRight:    'd',
-        btnFwdLeft:  'a',
-        btnFwdRight: 'd',
-        btnBkLeft:   'z',
-        btnBkRight:  'c'
-      };
-      Object.entries(btnMap).forEach(([id, key]) => {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        function press(e) {
-          e.preventDefault();
-          btn.classList.add('pressed');
-          if (!keys.has(key)) {
-            keys.add(key);
-            // Fire tapped reset so pulseStroke fires
-            if (key in tapped) tapped[key] = false;
-          }
-        }
-        function release(e) {
-          e.preventDefault();
-          btn.classList.remove('pressed');
-          keys.delete(key);
-          if (key in tapped) tapped[key] = false;
-        }
-        btn.addEventListener('pointerdown', press);
-        btn.addEventListener('pointerup', release);
-        btn.addEventListener('pointerleave', release);
-        btn.addEventListener('pointercancel', release);
-      });
-    })();
-
-        // ===== INTRO SCREEN =====
-    (function() {
-      const introScreen = document.getElementById('introScreen');
-      const introCanvas = document.getElementById('introCanvas');
-      const ictx = introCanvas.getContext('2d');
-      const bloodSvg = document.getElementById('bloodDrips');
-
-      // Generate blood drip SVG paths
-      function makeDrips() {
-        bloodSvg.innerHTML = '';
-        const count = 18;
-        for (let i = 0; i < count; i++) {
-          const x = 20 + (860 / count) * i + Math.random() * 30 - 10;
-          const h = 20 + Math.random() * 60;
-          const w = 4 + Math.random() * 8;
-          const delay = Math.random() * 1.2;
-          const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-          // Drip shape: rectangle with rounded bottom
-          const rx = w / 2;
-          path.setAttribute('d',
-            `M${x},0 L${x+w},0 L${x+w},${h-rx} Q${x+w},${h} ${x+rx},${h} Q${x},${h} ${x},${h-rx} Z`
-          );
-          path.setAttribute('fill','#cc0000');
-          path.style.animation = `drip ${0.6 + Math.random()*0.8}s ${delay}s ease-out forwards`;
-          path.style.transformOrigin = `${x}px 0px`;
-          path.style.transform = 'scaleY(0)';
-          bloodSvg.appendChild(path);
-        }
-      }
-      makeDrips();
-
-      // Wavy navy background on intro canvas
-      function resizeIntroCanvas() {
-        introCanvas.width = window.innerWidth;
-        introCanvas.height = window.innerHeight;
-      }
-      resizeIntroCanvas();
-      window.addEventListener('resize', resizeIntroCanvas);
-
-      let introT = 0;
-      function drawIntroWaves() {
-        introT += 0.018;
-        const w = introCanvas.width, h = introCanvas.height;
-        // Deep navy gradient
-        const grad = ictx.createLinearGradient(0,0,0,h);
-        grad.addColorStop(0,'#02040f');
-        grad.addColorStop(0.5,'#050d2a');
-        grad.addColorStop(1,'#030918');
-        ictx.fillStyle = grad;
-        ictx.fillRect(0,0,w,h);
-        // Wavy lines
-        ictx.globalAlpha = 0.22;
-        for (let row = 0; row < 14; row++) {
-          const y = (h / 13) * row;
-          ictx.beginPath();
-          for (let x = 0; x <= w; x += 8) {
-            const wy = y + Math.sin((x * 0.008) + introT + row * 0.7) * 18
-                         + Math.sin((x * 0.014) + introT * 1.3 + row) * 10;
-            if (x === 0) ictx.moveTo(x, wy); else ictx.lineTo(x, wy);
-          }
-          ictx.strokeStyle = `hsl(${220 + row * 3}, 70%, ${20 + row * 1.5}%)`;
-          ictx.lineWidth = 2.5;
-          ictx.stroke();
-        }
-        ictx.globalAlpha = 1;
-      }
-
-      let introRAF;
-      function introLoop() {
-        drawIntroWaves();
-        introRAF = requestAnimationFrame(introLoop);
-      }
-      introLoop();
-
-      // Dismiss intro after 3 seconds with fade
-      setTimeout(() => {
-        introScreen.style.transition = 'opacity 0.7s ease';
-        introScreen.style.opacity = '0';
-        setTimeout(() => {
-          cancelAnimationFrame(introRAF);
-          introScreen.style.display = 'none';
-        }, 700);
-      }, 3000);
-    })();
-
   </script>
 </body>
 </html>
