@@ -1,1 +1,1495 @@
-Nobody expects the Spanish inquisition
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rowing Simulator Game</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+      --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9; --color-surface-offset: #edeae5;
+      --color-border: #d4d1ca; --color-divider: #dcd9d5; --color-text: #28251d; --color-text-muted: #6f6d67; --color-text-inverse: #f9f8f4;
+      --color-primary: #01696f; --color-primary-hover: #0c4e54; --color-primary-highlight: #cedcd8; --color-blue: #006494; --color-gold: #d19900;
+      --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(40,37,29,.06); --shadow-md: 0 6px 18px rgba(40,37,29,.08); --shadow-lg: 0 14px 40px rgba(40,37,29,.14);
+      --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      --font-body: 'Satoshi', Inter, sans-serif; --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #22211f;
+      --color-border: #393836; --color-divider: #262523; --color-text: #d3d1cc; --color-text-muted: #989690; --color-text-inverse: #171614;
+      --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-primary-highlight: #313b3b; --color-blue: #6ea9d9; --color-gold: #e8af34;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.22); --shadow-md: 0 6px 18px rgba(0,0,0,.3); --shadow-lg: 0 14px 40px rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    body {
+      min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base); line-height: 1.5; color: var(--color-text);
+      background: radial-gradient(circle at 15% 15%, rgba(1,105,111,.08), transparent 28%), radial-gradient(circle at 85% 10%, rgba(0,100,148,.08), transparent 26%), linear-gradient(180deg, var(--color-bg), var(--color-surface-offset));
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    .app { display: grid; grid-template-columns: minmax(360px, 480px) 1fr; gap: var(--space-6); min-height: 100dvh; padding: var(--space-6); align-items: start; }
+    .panel, .stage-wrap { background: color-mix(in srgb, var(--color-surface) 88%, transparent); border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); backdrop-filter: blur(12px); }
+    .panel { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-6); position: relative; overflow: hidden; }
+    .panel::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--color-primary), var(--color-blue), var(--color-gold)); opacity: .8; }
+    .brand { display: flex; gap: var(--space-4); align-items: center; }
+    .logo { width: 52px; height: 52px; padding: 10px; border-radius: 14px; background: var(--color-primary-highlight); color: var(--color-primary); }
+    .brand h1 { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.02; letter-spacing: -.03em; }
+    .brand p { color: var(--color-text-muted); font-size: var(--text-sm); max-width: 30ch; }
+    .section { display: grid; gap: var(--space-3); }
+    .section h2 { font-size: var(--text-lg); font-family: var(--font-display); letter-spacing: -.02em; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-3); }
+    .stat { padding: var(--space-4); background: var(--color-surface-2); border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent); min-height: 92px; }
+    .stat-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .12em; }
+    .stat-value { font-size: var(--text-lg); font-weight: 700; margin-top: var(--space-2); }
+    .controls, .notes { display: grid; gap: var(--space-2); }
+    .control-row, .toggle-row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-divider); }
+    .control-row:last-child, .toggle-row:last-child { border-bottom: none; }
+    .keycap { display: inline-flex; min-width: 2.2rem; justify-content: center; align-items: center; padding: .28rem .55rem; border-radius: .65rem; background: var(--color-surface-offset); border: 1px solid var(--color-border); font-size: var(--text-sm); font-weight: 700; }
+    .toggle { appearance: none; width: 52px; height: 30px; border-radius: var(--radius-full); background: var(--color-surface-offset); border: 1px solid var(--color-border); position: relative; transition: var(--transition-interactive); }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--color-surface); box-shadow: var(--shadow-sm); transition: var(--transition-interactive); }
+    .toggle:checked { background: var(--color-primary); }
+    .toggle:checked::after { transform: translateX(22px); }
+    .actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+    .btn { min-height: 44px; padding: .8rem 1rem; border-radius: var(--radius-lg); font-weight: 700; transition: var(--transition-interactive); display: inline-flex; align-items: center; justify-content: center; gap: .55rem; }
+    .btn-primary { background: var(--color-primary); color: var(--color-text-inverse); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-secondary { background: var(--color-surface-2); color: var(--color-text); border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+    .stage-wrap { position: relative; padding: var(--space-4); display: grid; grid-template-rows: auto 1fr; gap: var(--space-3); min-height: 72dvh; }
+    .hud { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--color-surface-2); border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent); }
+    .hud strong, .hud span, .legend { font-size: var(--text-sm); }
+    .hud span, .legend { color: var(--color-text-muted); }
+    canvas#simCanvas { width: 100%; height: 100%; min-height: 620px; display: block; border-radius: calc(var(--radius-xl) - var(--space-4)); background: transparent; border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+    .legend { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+    .legend-item { display: inline-flex; align-items: center; gap: .5rem; }
+    .swatch { width: 14px; height: 14px; border-radius: 50%; }
+    .overlay {
+      position: relative;
+      left: auto; bottom: auto;
+      transform: none;
+      width: 100%;
+      margin: 6px 0 2px;
+      background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+      padding: 8px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      pointer-events: auto;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .overlay.hiding { opacity: 0; pointer-events: none; }
+    @media (min-width: 640px) {
+      .overlay { left: auto; right: var(--space-4); bottom: var(--space-4); transform: none; width: min(320px, calc(100% - 2rem)); }
+    }
+    .overlay h3 { font-size: var(--text-sm); margin-bottom: 2px; font-family: var(--font-display); font-size: var(--text-lg); margin-bottom: var(--space-2); }
+    .overlay p { color: var(--color-text-muted); font-size: var(--text-xs); max-width: 40ch; margin: 0; line-height: 1.3; }
+    .theme-toggle { width: 46px; height: 46px; border-radius: 50%; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+    .success-banner { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(7,14,19,.18); pointer-events: none; }
+    .success-banner.show { display: flex; }
+    .success-card { background: rgba(255,255,255,.92); color: #102126; padding: 1.2rem 1.4rem; border-radius: 18px; box-shadow: 0 18px 40px rgba(0,0,0,.2); max-width: 640px; text-align: center; font-weight: 700; }
+    .success-card strong { display: block; font-family: var(--font-display); font-size: clamp(1.4rem, 1.1rem + 1vw, 2.3rem); margin-bottom: .45rem; }
+    @media (max-width: 1024px) { .app { grid-template-columns: 1fr; } .panel { order: 2; } .stage-wrap { order: 1; } }
+    @media (max-width: 640px) { .app { padding: var(--space-4); gap: var(--space-4); } .panel, .stage-wrap { padding: var(--space-4); } canvas#simCanvas { min-height: 420px; } }
+      canvas#simCanvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+  
+    /* ── Row buttons panel ── */
+    .canvas-wrap { display: flex; flex-direction: column; }
+    .row-btns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 8px 0 4px;
+    }
+    .row-btn {
+      min-height: 50px;
+      border-radius: var(--radius-lg);
+      border: 2px solid color-mix(in srgb, var(--color-text) 18%, transparent);
+      background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+      color: var(--color-text);
+      font-family: 'Courier New', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      user-select: none; -webkit-user-select: none; touch-action: manipulation;
+      transition: background 80ms, transform 80ms; line-height: 1.2;
+    }
+    .row-btn:active, .row-btn.pressed { background: var(--color-primary); color: var(--color-text-inverse); transform: scale(0.94); }
+    .row-btn .bi { font-size: 1.2rem; line-height: 1; }
+    .row-btn.fwd { border-color: color-mix(in srgb, var(--color-primary) 55%, transparent); }
+    .row-btn.bwd { border-color: color-mix(in srgb, #e06868 55%, transparent); }
+
+    .panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; }
+    .panel-col { display: flex; flex-direction: column; gap: var(--space-3); }
+    .panel { overflow-y: auto; max-height: 100dvh; }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .panel-cols { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+  <a class="sr-only" href="#game">Skip to game</a>
+  <main class="app">
+    <aside class="panel" aria-label="Game controls and telemetry">
+
+      <!-- ── Top action bar ── -->
+      <div class="actions" style="margin-bottom:var(--space-4);">
+        <button class="btn btn-primary" id="resetBtn" data-i18n="reset">Restart</button>
+        <button class="btn btn-secondary" id="pauseBtn">Pauza</button>
+        <button class="btn btn-secondary" id="langBtn" style="min-width:68px;">🇬🇧 EN</button>
+      </div>
+
+      <!-- ── 2-column panel grid ── -->
+      <div class="panel-cols">
+
+        <!-- Left column: Telemetry + Water -->
+        <div class="panel-col">
+          <div class="section">
+            <h2 data-i18n="sec_telemetry">Telemetria</h2>
+            <div class="stats">
+              <article class="stat"><div class="stat-label" data-i18n="speed">Prędkość łodzi</div><div class="stat-value" id="speedValue">0.0 m/s</div></article>
+              <article class="stat"><div class="stat-label" data-i18n="angle">Kąt do mostu</div><div class="stat-value" id="angleValue">0°</div></article>
+              <article class="stat"><div class="stat-label" data-i18n="dist">Dystans</div><div class="stat-value" id="distanceValue">0.0 m</div></article>
+              <article class="stat"><div class="stat-label" data-i18n="flow">Prąd rzeki</div><div class="stat-value" id="flowValue">Off</div></article>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2 data-i18n="sec_water">Ustawienia wody</h2>
+            <label class="toggle-row" for="minesToggle"><span data-i18n="minesLabel">💣 Miny wodne</span><input class="toggle" id="minesToggle" type="checkbox" /></label>
+            <label class="toggle-row" for="flowToggle"><span data-i18n="rfLabel">Prąd rzeki</span><input class="toggle" id="flowToggle" type="checkbox" aria-label="Enable river flow" /></label>
+            <label class="toggle-row" for="strongFlowToggle"><span data-i18n="strongLabel">Silny prąd</span><input class="toggle" id="strongFlowToggle" type="checkbox" aria-label="Strong river current" /></label>
+            <label class="toggle-row" for="themeToggle"><span data-i18n="dmLabel">Tryb ciemny</span><button class="theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button></label>
+          </div>
+        </div>
+
+        <!-- Right column: Controls + Tips -->
+        <div class="panel-col">
+          <div class="section controls">
+            <h2 data-i18n="sec_controls">Sterowanie</h2>
+            <div class="control-row"><span data-i18n="ctrlFwd">Oba wiosła do przodu</span><span class="keycap">W</span></div>
+            <div class="control-row"><span data-i18n="ctrlBack">Oba wiosła do tyłu</span><span class="keycap">S</span></div>
+            <div class="control-row"><span data-i18n="ctrlLeft">Lewe wiosło naprzód</span><span class="keycap">A</span></div>
+            <div class="control-row"><span data-i18n="ctrlRight">Prawe wiosło naprzód</span><span class="keycap">D</span></div>
+            <div class="control-row"><span data-i18n="ctrlZL">Lewe wiosło wstecz</span><span class="keycap">Z</span></div>
+            <div class="control-row"><span data-i18n="ctrlCR">Prawe wiosło wstecz</span><span class="keycap">C</span></div>
+          </div>
+
+          <div class="section notes">
+            <h2 data-i18n="sec_tips">Wskazówki dokowania</h2>
+            <p><span data-i18n="tips1">W i S to pojedyncze uderzenia – tap, nie trzymaj.</span></p>
+            <p><span data-i18n="tips2">Używaj krótkich korekt Z lub C do hamowania i korekty kursu.</span></p>
+          </div>
+        </div>
+
+      </div><!-- /panel-cols -->
+
+    </aside>
+
+
+    <section class="stage-wrap" id="game" aria-label="Game stage">
+      <div class="hud">
+        <div><strong>Goal:</strong> <span>Wpłyń do białego obszaru przy moście równolegle do mostu (±5°) i zatrzymaj łódź.</span></div>
+        <div class="legend">
+          <span class="legend-item"><span class="swatch" style="background:#d6c4a8"></span>Dock / land</span>
+          <span class="legend-item"><span class="swatch" style="background:#ffffff"></span>Parking box</span>
+          <span class="legend-item"><span class="swatch" style="background:#e06868"></span>Buoy / obstacle</span>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+      <canvas id="simCanvas" width="1280" height="840" aria-label="Top-down rowing simulator"></canvas>
+      <div class="overlay" id="messageBox"><h3>Przybij do pomostu</h3><p>Wpłyń do białego obszaru przy moście równolegle do mostu (±5°) i zatrzymaj łódź.</p></div>
+      <div class="success-banner" id="successBanner"><div class="success-card"><strong>Gratulacje!</strong><span>Można wysiadać. ALE NIE WSZYSCY NARAZ!</span></div></div>
+      <div class="row-btns" id="rowBtns">
+        <button class="row-btn fwd" id="btn-a"><span class="bi">🚣↖</span><span data-i18n="btnFL">L WP</span></button>
+        <button class="row-btn fwd" id="btn-w"><span class="bi">🚣⬆</span><span data-i18n="btnFB">OBA WP</span></button>
+        <button class="row-btn fwd" id="btn-d"><span class="bi">🚣↗</span><span data-i18n="btnFR">P WP</span></button>
+        <button class="row-btn bwd" id="btn-z"><span class="bi">↙🚣</span><span data-i18n="btnBL">L TYŁ</span></button>
+        <button class="row-btn bwd" id="btn-s"><span class="bi">⬇🚣</span><span data-i18n="btnBB">OBA TYŁ</span></button>
+        <button class="row-btn bwd" id="btn-c"><span class="bi">↘🚣</span><span data-i18n="btnBR">P TYŁ</span></button>
+      </div>
+    </div>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const flowToggle = document.getElementById('flowToggle');
+    const resetBtn = document.getElementById('resetBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const messageBox = document.getElementById('messageBox');
+    const successBanner = document.getElementById('successBanner');
+    const speedValue = document.getElementById('speedValue');
+    const angleValue = document.getElementById('angleValue');
+    const distanceValue = document.getElementById('distanceValue');
+    const flowValue = document.getElementById('flowValue');
+    const themeToggle = document.getElementById('themeToggle');
+
+    let running = true;
+    let riverFlowEnabled = true;
+    let strongFlowEnabled = true;
+    let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    const keys = new Set();
+    const tapped = { w:false, s:false, a:false, d:false, z:false, c:false };
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (['w','s','a','d','z','c'].includes(key) || e.key === 'Escape') e.preventDefault();
+      if (e.key === 'Escape') {
+        running = !running;
+        pauseBtn.textContent = running ? 'Pause' : 'Resume';
+      }
+      keys.add(key);
+    });
+    document.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+      keys.delete(key);
+      if (key in tapped) tapped[key] = false;
+
+    });
+
+    flowToggle.addEventListener('change', () => riverFlowEnabled = flowToggle.checked);
+    flowToggle.checked = true;
+    const strongFlowToggle = document.getElementById('strongFlowToggle');
+    strongFlowToggle.addEventListener('change', () => strongFlowEnabled = strongFlowToggle.checked);
+    strongFlowToggle.checked = true;
+    const minesToggle = document.getElementById('minesToggle');
+    minesToggle.addEventListener('change', () => {
+      minesEnabled = minesToggle.checked;
+      mines = minesEnabled ? spawnMines() : [];
+    });
+    function spawnMines() {
+      return [{x:200,y:350},{x:380,y:310},{x:560,y:290},{x:720,y:370},
+              {x:870,y:305},{x:1020,y:345},{x:1110,y:415},{x:760,y:440},
+              {x:460,y:415},{x:310,y:425},{x:1160,y:305},{x:610,y:325}]
+        .filter(c=>Math.hypot(c.x-boat.x,c.y-boat.y)>160)
+        .map(c=>({x:c.x,y:c.y,r:14,bob:Math.random()*Math.PI*2,burning:false}));
+    }
+    function drawMines(ts) {
+      if (!minesEnabled) return;
+      mines.forEach(m => {
+        const bob=Math.sin(ts*0.0008+m.bob)*3;
+        ctx.save(); ctx.translate(m.x,m.y+bob);
+        if (m.burning) {
+          const fc=[['#ff4400','#ff8800','#ffcc00'],['#ff2200','#ff6600','#ffaa00']];
+          const tf=Math.floor(ts/120)%2;
+          ctx.fillStyle=fc[tf][0]; ctx.fillRect(-6,-14,12,12);
+          ctx.fillStyle=fc[tf][1]; ctx.fillRect(-8,-6,16,8);
+          ctx.fillStyle=fc[tf][2]; ctx.fillRect(-10,0,20,8);
+        } else {
+          ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(0,0,m.r,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='#444'; ctx.beginPath(); ctx.arc(0,0,m.r-3,0,Math.PI*2); ctx.fill();
+          [0,1,2,3,4,5,6,7].forEach(i=>{
+            const a=i/8*Math.PI*2;
+            ctx.fillStyle='#333';
+            ctx.beginPath(); ctx.arc(Math.cos(a)*(m.r+5),Math.sin(a)*(m.r+5),4,0,Math.PI*2); ctx.fill();
+          });
+          ctx.fillStyle='#ff2222'; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='#555';
+          for(let cy=m.r+2;cy<m.r+18;cy+=5) { ctx.fillRect(-2,cy,4,4); }
+        }
+        ctx.restore();
+      });
+    }
+    function checkMineCollision(ts) {
+      if (!minesEnabled||!mines.length||mineHitState) return;
+      const corners=getBoatCorners();
+      for(let i=mines.length-1;i>=0;i--){
+        const m=mines[i]; if(m.burning) continue;
+        let hit=Math.hypot(boat.x-m.x,boat.y-m.y)<m.r+22;
+        if(!hit) for(const p of corners) if(Math.hypot(p.x-m.x,p.y-m.y)<m.r+16){hit=true;break;}
+        if(hit){
+          mines[i].burning=true;
+          mineHitState={startTs:ts,mx:m.x,my:m.y};
+          boat.vx=0; boat.vy=0; boat.angularVelocity=0;
+          running=false;
+          showMessage('💥 BOOM! Mina!','Trafiłeś na minę! Resetowanie...');
+          setTimeout(()=>{ mineHitState=null; running=true; resetBoat(); if(minesEnabled) mines=spawnMines(); },2200);
+          break;
+        }
+      }
+    }
+    resetBtn.addEventListener('click', resetBoat);
+    pauseBtn.addEventListener('click', () => {
+      running = !running;
+      pauseBtn.textContent = running ? 'Pause' : 'Resume';
+    });
+    themeToggle.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', currentTheme);
+    });
+
+    const world = {
+      width: canvas.width, height: canvas.height,
+      leftBank: [{x:0,y:840},{x:0,y:570},{x:380,y:560},{x:380,y:840},{x:580,y:840},{x:580,y:560},{x:1280,y:570},{x:1280,y:840}],
+      rightBank: [{x:0,y:0},{x:780,y:0},{x:780,y:210},{x:950,y:195},{x:1050,y:200},{x:1050,y:0},{x:1280,y:0},{x:1280,y:210},{x:1100,y:200},{x:950,y:190},{x:820,y:240},{x:700,y:280},{x:600,y:270},{x:480,y:230},{x:340,y:205},{x:180,y:195},{x:0,y:210}],
+      marina: {x:390,y:580,w:180,h:230},
+      dockWalls: [{x:362,y:560,w:20,h:282},{x:578,y:560,w:20,h:282}],
+      bridge: {x1:380,y1:560,x2:380,y2:840,angle:-1.5708,thickness:40},
+      berth: {x:390,y:580,w:170,h:220},
+      hangar: {x:60,y:620,w:140,h:80},
+      buoys: [{x:785,y:215,r:12,col:'#ffe600'},{x:1045,y:210,r:12,col:'#ffe600'}],
+      flow: {x:-28,y:0}
+    };
+    const boat = {
+      x: 900, y: 390,
+      angle: 3.14159,
+      vx: 0, vy: 0, angularVelocity: 0,
+      length: 200, width: 20,
+      oarAnim: {portPhase:0,starPhase:0,portActive:0,starActive:0},
+      maxStroke: 65,
+      drag: 0.992,
+      waterDrag: 0.995,
+      turnDamping: 0.94
+    };
+    const startState = { x: boat.x, y: boat.y, angle: boat.angle };
+    let win = false;
+    let winAnim = {active:false, crew:[], t:0};
+    let crashCooldown = 0;
+    let shoutTimer = 0;
+    let shoutWord = '';
+    let shoutAlpha = 0;
+    const shoutWords = ['ruchy!', 'szybciej!', 'mocniej!', 'tempo!'];
+    let mineHitState = null;
+    let minesEnabled = false;
+    let mines = [];
+    let lastTs = performance.now();
+    let confetti = [];
+
+    function resetBoat() {
+      boat.x = startState.x; boat.y = startState.y; boat.angle = startState.angle;
+      boat.vx = 0; boat.vy = 0; boat.angularVelocity = 0;
+      running = true; win = false; crashCooldown = 0; confetti = [];
+      successBanner.classList.remove('show');
+      mineHitState = null;
+      pauseBtn.textContent = 'Pause';
+      showMessage('Fresh attempt', 'Tap W, S, A, and D for individual strokes. Use short correction taps and settle into the bridge-side box nearly parallel to the bridge.');
+    }
+
+    function showMessage(title, body) {
+      messageBox.innerHTML = `<h3>${title}</h3><p>${body}</p><span style="position:absolute;top:6px;right:10px;font-size:14px;opacity:0.5;">✕</span>`;
+      messageBox.classList.remove('hiding');
+      messageBox.style.opacity = '1';
+      clearTimeout(messageBox._timer);
+      messageBox._timer = setTimeout(() => {
+        messageBox.classList.add('hiding');
+      }, 4000);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      messageBox.addEventListener('click', () => messageBox.classList.add('hiding'));
+    });
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function wrapAngle(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
+
+    function pointInPolygon(point, polygon) {
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+        const intersect = ((yi > point.y) !== (yj > point.y)) && (point.x < (xj - xi) * (point.y - yi) / ((yj - yi) || 0.00001) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function rectCollision(rect, p) { return p.x > rect.x && p.x < rect.x + rect.w && p.y > rect.y && p.y < rect.y + rect.h; }
+
+    function getBoatCorners() {
+      const c = Math.cos(boat.angle), s = Math.sin(boat.angle);
+      const halfL = boat.length / 2, halfW = boat.width / 2;
+      return [
+        { x: boat.x + c * halfL - s * halfW, y: boat.y + s * halfL + c * halfW },
+        { x: boat.x + c * halfL + s * halfW, y: boat.y + s * halfL - c * halfW },
+        { x: boat.x - c * halfL + s * halfW, y: boat.y - s * halfL - c * halfW },
+        { x: boat.x - c * halfL - s * halfW, y: boat.y - s * halfL + c * halfW }
+      ];
+    }
+
+    function pulseStroke(name, portImpulse, starImpulse) {
+      if (keys.has(name) && !tapped[name]) {
+        tapped[name] = true;
+        const forward = { x: Math.cos(boat.angle), y: Math.sin(boat.angle) };
+        const total = portImpulse + starImpulse;
+        const yaw = (starImpulse - portImpulse) * 0.018;
+        boat.vx += forward.x * total * 0.46;
+        boat.vy += forward.y * total * 0.46;
+        boat.angularVelocity += yaw;
+      if(portImpulse!==0){boat.oarAnim.portPhase=0;boat.oarAnim.portActive=portImpulse>0?1:-1;}
+      if(starImpulse!==0){boat.oarAnim.starPhase=0;boat.oarAnim.starActive=starImpulse>0?1:-1;}
+      }
+    }
+
+    function handleCollision(prevX, prevY) {
+      const corners = getBoatCorners();
+      let hit = false;
+      for (const p of corners) {
+        if (pointInPolygon(p, world.leftBank) || pointInPolygon(p, world.rightBank)) hit = true;
+        for (const wall of world.dockWalls) if (rectCollision(wall, p)) hit = true;
+        for (const buoy of world.buoys) {
+          const dx = p.x - buoy.x, dy = p.y - buoy.y;
+          if (dx * dx + dy * dy < (buoy.r + 8) * (buoy.r + 8)) hit = true;
+        }
+      }
+      if (hit) {
+        // Block: restore previous position, kill velocity
+        boat.x = prevX; boat.y = prevY;
+        boat.vx *= -0.15; boat.vy *= -0.15;
+        boat.angularVelocity *= -0.3;
+        if (crashCooldown <= 0) {
+          crashCooldown = 0.7;
+          showMessage('Uwaga!', 'Uderzenie w brzeg lub przeszkodę. Zwolnij i zmień kurs.');
+        }
+      }
+    }
+
+    function updatePhysics(dt) {
+      const forward = { x: Math.cos(boat.angle), y: Math.sin(boat.angle) };
+      const right = { x: Math.cos(boat.angle + Math.PI / 2), y: Math.sin(boat.angle + Math.PI / 2) };
+
+      pulseStroke('w', boat.maxStroke, boat.maxStroke);
+      pulseStroke('s', -boat.maxStroke * 0.92, -boat.maxStroke * 0.92);
+      pulseStroke('a', boat.maxStroke * 0.72, 0);
+      pulseStroke('d', 0, boat.maxStroke * 0.72);
+
+      // Z: backward + turn right — LEFT (port) oar back stroke
+      if (keys.has('z') && !tapped['z']) {
+        tapped['z'] = true;
+        boat.vx -= forward.x * boat.maxStroke * 0.38;
+        boat.vy -= forward.y * boat.maxStroke * 0.38;
+        boat.angularVelocity += boat.maxStroke * 0.72 * 0.018;
+        boat.oarAnim.portPhase = 0; boat.oarAnim.portActive = -1;
+      }
+      // C: backward + turn left — RIGHT (star) oar back stroke
+      if (keys.has('c') && !tapped['c']) {
+        tapped['c'] = true;
+        boat.vx -= forward.x * boat.maxStroke * 0.38;
+        boat.vy -= forward.y * boat.maxStroke * 0.38;
+        boat.angularVelocity -= boat.maxStroke * 0.72 * 0.018;
+        boat.oarAnim.starPhase = 0; boat.oarAnim.starActive = -1;
+      }
+
+      const velForward = boat.vx * forward.x + boat.vy * forward.y;
+      const velSide = boat.vx * right.x + boat.vy * right.y;
+      boat.vx -= right.x * velSide * 0.09;
+      boat.vy -= right.y * velSide * 0.09;
+
+      const skegAssist = clamp(Math.abs(velForward) / 170, 0, 1);
+      boat.angularVelocity *= boat.turnDamping - skegAssist * 0.016;
+
+      if (riverFlowEnabled) {
+        const mag = Math.hypot(world.flow.x, world.flow.y);
+        const flowMult = strongFlowEnabled ? 0.55 : 0.22;
+        boat.vx += world.flow.x * dt * flowMult;
+        boat.vy += world.flow.y * dt * flowMult;
+        const cross = (forward.x * world.flow.y - forward.y * world.flow.x) / mag;
+        const align = (forward.x * world.flow.x + forward.y * world.flow.y) / mag;
+        boat.angularVelocity += cross * 0.011;
+        const dragPenalty = clamp((1 - align) * 0.0034, 0, 0.0062);
+        boat.vx *= 1 - dragPenalty;
+        boat.vy *= 1 - dragPenalty;
+      }
+
+      boat.vx *= boat.drag;
+      boat.vy *= boat.waterDrag;
+      boat.angle = wrapAngle(boat.angle + boat.angularVelocity * dt);
+      // Save position before move for blocking collision
+      const prevX = boat.x, prevY = boat.y;
+      boat.x += boat.vx * dt;
+      boat.y += boat.vy * dt;
+      boat.x = clamp(boat.x, 20, world.width - 20);
+      boat.y = clamp(boat.y, 20, world.height - 20);
+
+      handleCollision(prevX, prevY);
+      checkMineCollision(performance.now());
+      if (crashCooldown > 0) crashCooldown -= dt;
+      // Trainer shout every 3s
+      shoutTimer += dt;
+      if (shoutTimer >= 3) {
+        shoutTimer = 0;
+        shoutWord = shoutWords[Math.floor(Math.random() * shoutWords.length)];
+        shoutAlpha = 1;
+      }
+      if (shoutAlpha > 0) shoutAlpha = Math.max(0, shoutAlpha - dt * 1.1);
+      checkWin();
+      updateTelemetry();
+    }
+
+    function launchConfetti() {
+      confetti = Array.from({ length: 160 }, (_, i) => ({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * 200,
+        vx: -1.8 + Math.random() * 3.6,
+        vy: 2 + Math.random() * 4,
+        size: 6 + Math.random() * 7,
+        rot: Math.random() * Math.PI * 2,
+        spin: -0.15 + Math.random() * 0.3,
+        color: ['#01696f', '#d19900', '#e06868', '#ffffff', '#6ea9d9', '#77b45a'][i % 6]
+      }));
+    }
+
+    function checkWin() {
+      const centerX = world.berth.x + world.berth.w / 2;
+      const centerY = world.berth.y + world.berth.h / 2;
+      const dist = Math.hypot(boat.x - centerX, boat.y - centerY);
+      const speed = Math.hypot(boat.vx, boat.vy);
+      const bridgeDeg = ((boat.angle - world.bridge.angle) * 180 / Math.PI + 360) % 360;
+      const inZone = boat.x > world.berth.x && boat.x < world.berth.x + world.berth.w && boat.y > world.berth.y && boat.y < world.berth.y + world.berth.h;
+      // Bridge is vertical (-π/2). Parallel = bridgeDeg near 0/360 or 180, within ±5°
+      const aligned = (bridgeDeg >= 355 || bridgeDeg <= 5) || (bridgeDeg >= 175 && bridgeDeg <= 185);
+      if (!win && inZone && aligned && speed < 14) {
+        win = true;
+        running = false;
+        pauseBtn.textContent = 'Resume';
+        successBanner.classList.add('show');
+        launchConfetti();
+        showMessage('Gratulacje!', 'Można wysiadać. ALE NIE WSZYSCY NARAZ!');
+        // Launch crew disembark animation
+        winAnim.active = true; winAnim.t = 0; winAnim.startTime = performance.now(); winAnim.crew = [];
+        for (var ci=0; ci<8; ci++) {
+          winAnim.crew.push({
+            delay: ci * 0.35,
+            x: boat.x, y: boat.y,
+            tx: 360 + (ci%3)*22, ty: 540 + ci*28, // walk toward bridge
+            phase: 0, done: false,
+            hatCol: ['#ff2222','#2255ff','#ffee00','#22cc44','#ff8800','#cc22cc','#00cccc','#ffffff'][ci]
+          });
+        }
+      }
+      distanceValue.textContent = `${(dist / 22).toFixed(1)} m`;
+      angleValue.textContent = `${Math.round(bridgeDeg)}°`;
+    }
+
+    function updateTelemetry() {
+      speedValue.textContent = `${(Math.hypot(boat.vx, boat.vy) / 18).toFixed(1)} m/s`;
+      flowValue.textContent = riverFlowEnabled ? `${(Math.hypot(world.flow.x, world.flow.y) / 8).toFixed(1)} kn eq.` : 'Off';
+    }
+
+    function drawPolygon(points, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawWater() {
+      const T=16, ts=Math.floor(performance.now()/450)%2;
+      for(let x=0;x<canvas.width;x+=T){
+        for(let y=0;y<canvas.height;y+=T){
+          const phase=(Math.floor(x/T)+Math.floor(y/T)+ts)%2;
+          ctx.fillStyle=phase===0?'#1a6ea8':'#1557a0';
+          ctx.fillRect(x,y,T,T);
+          if((Math.floor(x/T)+Math.floor(y/T))%4===0){
+            ctx.fillStyle='#2288cc'; ctx.fillRect(x+2,y+2,5,3);
+          }
+        }
+      }
+    }
+
+    function drawBanks() {
+      // Land fill (flat pixel colour)
+      ctx.fillStyle='#5a8c3a';
+      ctx.fillRect(0,0,780,210);             // north-left
+      ctx.fillRect(1050,0,230,210);          // north-right (canal gap 780-1050)
+      ctx.fillRect(0,560,380,280);           // south-left
+      ctx.fillRect(580,560,700,280);         // south-right
+
+      // Darker border strip (1 tile = 8px)
+      ctx.fillStyle='#3d6b22';
+      ctx.fillRect(0,202,780,8);             // north bottom edge left
+      ctx.fillRect(1050,202,230,8);          // north bottom edge right
+      ctx.fillRect(0,560,380,8);             // south-left top
+      ctx.fillRect(580,560,700,8);           // south-right top
+      ctx.fillRect(374,560,8,264);           // left inlet wall
+      ctx.fillRect(578,560,8,264);           // right inlet wall
+
+      // Dither strip (checkerboard) along water edges
+      ctx.fillStyle='#6aaa40';
+      for(let x=0;x<canvas.width;x+=16){
+        const inCanal = (x+8 > 780 && x < 1050);
+        if(Math.floor(x/16)%2===0){ if(!inCanal) ctx.fillRect(x,194,8,8); ctx.fillRect(x,552,8,8); }
+        else { if(!inCanal) ctx.fillRect(x+8,194,8,8); ctx.fillRect(x+8,552,8,8); }
+      }
+
+      // Pixel trees (3-block sprite: trunk + canopy + top)
+      [
+        // Top left land (x<780)
+        [60,80],[130,60],[200,90],[280,70],[350,85],[440,65],[520,80],[610,90],[690,70],[750,85],
+        // Top right land (x>1050)  
+        [1080,75],[1140,60],[1200,80],[1260,70],
+        // South left bank
+        [40,700],[100,660],[160,710],[240,680],[310,650],[60,780],[180,760],
+        // South right bank
+        [640,620],[720,660],[800,640],[900,680],[1000,620],[1100,660],[1180,640],[1260,700],
+        [650,730],[780,750],[950,720],[1100,750],[1220,730]
+      ].forEach(([tx,ty])=>{
+        ctx.fillStyle='#5a3a1a'; ctx.fillRect(tx-4,ty+24,8,16);   // trunk
+        ctx.fillStyle='#2d6e1a'; ctx.fillRect(tx-14,ty+8,28,20);  // lower canopy
+        ctx.fillStyle='#3d8a22'; ctx.fillRect(tx-10,ty-2,20,14);  // mid canopy
+        ctx.fillStyle='#50a82e'; ctx.fillRect(tx-6,ty-12,12,14);  // top
+        ctx.fillStyle='#6dc23e'; ctx.fillRect(tx-4,ty-14,8,6);    // highlight
+      });
+
+      
+      // ── Zoo: top-right corner (x:1060-1275, y:10-190) ───────────────────
+      (function(){
+        // Fence posts + rails
+        ctx.fillStyle='#8B6914';
+        for(var fx=1060;fx<=1270;fx+=18){ ctx.fillRect(fx,12,5,30); }   // top rail posts
+        for(var fx=1060;fx<=1270;fx+=18){ ctx.fillRect(fx,155,5,30); }  // bottom rail posts
+        ctx.fillStyle='#a07820';
+        ctx.fillRect(1060,18,215,5); ctx.fillRect(1060,28,215,5);       // top rails
+        ctx.fillRect(1060,158,215,5); ctx.fillRect(1060,168,215,5);     // bottom rails
+        ctx.fillRect(1060,10,5,180); ctx.fillRect(1272,10,5,180);       // side posts
+
+        // === MONKEY (x:1075, y:60) ===
+        var mx=1090,my=75;
+        // Body
+        ctx.fillStyle='#8B5E3C'; ctx.fillRect(mx-7,my,14,16);
+        // Head
+        ctx.beginPath(); ctx.arc(mx,my-6,9,0,Math.PI*2);
+        ctx.fillStyle='#8B5E3C'; ctx.fill();
+        // Face
+        ctx.beginPath(); ctx.arc(mx,my-4,6,0,Math.PI*2);
+        ctx.fillStyle='#c49a6c'; ctx.fill();
+        // Eyes
+        ctx.fillStyle='#000'; ctx.fillRect(mx-4,my-8,3,3); ctx.fillRect(mx+1,my-8,3,3);
+        // Ears
+        ctx.beginPath(); ctx.arc(mx-9,my-6,3,0,Math.PI*2); ctx.fillStyle='#8B5E3C'; ctx.fill();
+        ctx.beginPath(); ctx.arc(mx+9,my-6,3,0,Math.PI*2); ctx.fill();
+        // Tail (curly)
+        ctx.strokeStyle='#8B5E3C'; ctx.lineWidth=3; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(mx+7,my+12); ctx.quadraticCurveTo(mx+22,my+8,mx+18,my-2); ctx.stroke();
+        // Arms
+        ctx.fillStyle='#8B5E3C'; ctx.fillRect(mx-14,my+2,8,5); ctx.fillRect(mx+6,my+2,8,5);
+        // Legs
+        ctx.fillRect(mx-5,my+14,5,10); ctx.fillRect(mx+1,my+14,5,10);
+
+        // === ELEPHANT (x:1160, y:55) ===
+        var ex=1165,ey=65;
+        ctx.fillStyle='#888888';
+        // Body
+        ctx.beginPath(); ctx.ellipse(ex,ey+20,22,18,0,0,Math.PI*2); ctx.fill();
+        // Head
+        ctx.beginPath(); ctx.ellipse(ex+18,ey+8,14,12,0,0,Math.PI*2); ctx.fill();
+        // Trunk
+        ctx.strokeStyle='#888888'; ctx.lineWidth=7; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(ex+28,ey+12); ctx.quadraticCurveTo(ex+38,ey+22,ex+32,ey+32); ctx.stroke();
+        // Ear
+        ctx.beginPath(); ctx.ellipse(ex+10,ey+5,10,13,-0.3,0,Math.PI*2);
+        ctx.fillStyle='#777'; ctx.fill();
+        ctx.beginPath(); ctx.ellipse(ex+10,ey+5,7,9,-0.3,0,Math.PI*2);
+        ctx.fillStyle='#d4a0a0'; ctx.fill();
+        // Legs
+        ctx.fillStyle='#888888';
+        [[ex-14,ey+32],[ex-4,ey+34],[ex+6,ey+34],[ex+14,ey+32]].forEach(function(l){
+          ctx.fillRect(l[0],l[1],9,16);
+        });
+        // Eye
+        ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(ex+24,ey+5,2,0,Math.PI*2); ctx.fill();
+        // Tusk
+        ctx.strokeStyle='#ffffcc'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(ex+30,ey+14); ctx.lineTo(ex+42,ey+20); ctx.stroke();
+
+        // === DINOSAUR (T-Rex style, x:1230, y:50) ===
+        var dx=1245,dy=60;
+        ctx.fillStyle='#3a7a3a';
+        // Tail
+        ctx.beginPath(); ctx.moveTo(dx-20,dy+30); ctx.lineTo(dx,dy+20); ctx.lineTo(dx-5,dy+35); ctx.closePath(); ctx.fill();
+        // Body
+        ctx.beginPath(); ctx.ellipse(dx+5,dy+22,18,14,0.2,0,Math.PI*2); ctx.fill();
+        // Head
+        ctx.beginPath(); ctx.moveTo(dx+16,dy+8); ctx.lineTo(dx+38,dy+4); ctx.lineTo(dx+40,dy+14); ctx.lineTo(dx+16,dy+18); ctx.closePath(); ctx.fill();
+        // Eye
+        ctx.fillStyle='#ffff00'; ctx.beginPath(); ctx.arc(dx+30,dy+9,3,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(dx+30,dy+9,1.5,0,Math.PI*2); ctx.fill();
+        // Teeth
+        ctx.fillStyle='#fff';
+        [dx+22,dx+26,dx+30,dx+34].forEach(function(tx2){ ctx.fillRect(tx2,dy+14,3,4); });
+        // Arms (tiny T-rex arms)
+        ctx.fillStyle='#3a7a3a'; ctx.fillRect(dx+14,dy+14,6,8); ctx.fillRect(dx+20,dy+20,5,6);
+        // Legs
+        ctx.fillRect(dx-2,dy+32,10,16); ctx.fillRect(dx+8,dy+34,10,14);
+        // Spots
+        ctx.fillStyle='#2a5a2a';
+        ctx.beginPath(); ctx.arc(dx+2,dy+18,4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(dx+10,dy+26,3,0,Math.PI*2); ctx.fill();
+      })();
+
+
+        // === POLICE STATION (top-right, above zoo) ===
+        (function(){
+          var px=10, py=5, pw=215, ph=50;
+          // Building body
+          ctx.fillStyle='#4466aa'; ctx.fillRect(px,py,pw,ph);
+          // Roof
+          ctx.fillStyle='#223366';
+          ctx.beginPath(); ctx.moveTo(px-4,py); ctx.lineTo(px+pw/2,py-18); ctx.lineTo(px+pw+4,py); ctx.closePath(); ctx.fill();
+          // Windows
+          ctx.fillStyle='#aaccff';
+          [[px+12,py+10],[px+44,py+10],[px+76,py+10],[px+108,py+10],[px+140,py+10],[px+172,py+10]].forEach(function(w){
+            ctx.fillRect(w[0],w[1],18,14);
+            ctx.strokeStyle='#223366'; ctx.lineWidth=1.5; ctx.strokeRect(w[0],w[1],18,14);
+            ctx.fillStyle='#223366'; ctx.fillRect(w[0]+8,w[1],2,14); ctx.fillRect(w[0],w[1]+6,18,2);
+            ctx.fillStyle='#aaccff';
+          });
+          // Door
+          ctx.fillStyle='#1a2a44'; ctx.fillRect(px+pw/2-10,py+20,20,ph-20);
+          ctx.strokeStyle='#4488ff'; ctx.lineWidth=2; ctx.strokeRect(px+pw/2-10,py+20,20,ph-20);
+          // Sign
+          ctx.fillStyle='#ffffff';
+          ctx.font='bold 9px "Courier New",monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText('POLICJA',px+pw/2,py+8);
+          // Blue light on roof
+          var lt=performance.now()/400;
+          ctx.fillStyle='rgba(0,100,255,'+(0.6+0.4*Math.sin(lt))+')';
+          ctx.beginPath(); ctx.arc(px+pw/2,py-18,5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='rgba(255,255,255,'+(0.4+0.4*Math.cos(lt))+')';
+          ctx.beginPath(); ctx.arc(px+pw/2,py-18,3,0,Math.PI*2); ctx.fill();
+          // Flag pole
+          ctx.fillStyle='#888'; ctx.fillRect(px+pw-14,py-30,3,30);
+          ctx.fillStyle='#cc0000'; ctx.fillRect(px+pw-11,py-30,16,10);
+          ctx.fillStyle='#ffffff'; ctx.fillRect(px+pw-11,py-24,16,4);
+        })();
+// Pixel buildings south bank
+      [[60,590,80,70,'#c8b89a','#a09070'],[150,600,60,55,'#b8a888','#907860'],
+       [220,595,90,65,'#d0c0a0','#b09878']].forEach(([x,y,w,h,f,r])=>{
+        ctx.fillStyle=f; ctx.fillRect(x,y,w,h);
+        ctx.fillStyle=r; ctx.fillRect(x,y,w,8);  // roof
+        // pixel windows
+        ctx.fillStyle='#88ccee';
+        ctx.fillRect(x+8,y+16,12,10); ctx.fillRect(x+w-20,y+16,12,10);
+        ctx.fillStyle='#3a3a3a'; ctx.strokeRect(x,y,w,h);
+      });
+
+      // Pixel bushes along north bank
+      for(let bx=30;bx<canvas.width-30;bx+=48){
+        ctx.fillStyle=(bx/48)%2===0?'#2d6e1a':'#3d8a22';
+        ctx.fillRect(bx,195,16,10);
+      }
+
+      // Odra label (pixel style, monospace)
+      ctx.fillStyle='rgba(180,230,255,0.5)';
+      ctx.font='bold 18px "Courier New",monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('~ ODRA ~',580,390);
+      ctx.fillText('~ ODRA ~',1020,370);
+
+      // START marker
+      ctx.fillStyle='#ffee00'; ctx.fillRect(892,382,16,16);
+      ctx.fillStyle='#000';
+      ctx.font='bold 11px "Courier New",monospace';
+      ctx.textAlign='left'; ctx.fillText('START',912,390);
+    }
+
+    function drawFlow() {
+      if (!riverFlowEnabled) return;
+      const angle = Math.atan2(world.flow.y, world.flow.x);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,.45)';
+      ctx.fillStyle = 'rgba(255,255,255,.45)';
+      ctx.lineWidth = 2;
+      for (let y = 100; y < canvas.height; y += 110) {
+        for (let x = 260; x < canvas.width - 100; x += 170) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          ctx.beginPath(); ctx.moveTo(-24, 0); ctx.lineTo(20, 0); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(9, -7); ctx.lineTo(9, 7); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawBridgeAndDock() {
+      // Inlet side walls (pixel-tiled)
+      for(let py=560;py<840;py+=16){
+        ctx.fillStyle=Math.floor(py/16)%2===0?'#8b6020':'#7a5518';
+        ctx.fillRect(362,py,20,16);
+        ctx.fillRect(578,py,20,16);
+      }
+      // Highlight stripe on bridge walls
+      ctx.fillStyle='#c8902a';
+      ctx.fillRect(362,558,4,284); ctx.fillRect(394,558,4,284);
+      ctx.fillRect(578,558,4,284); ctx.fillRect(610,558,4,284);
+
+      // Berth dashed box
+      ctx.strokeStyle='rgba(255,255,255,0.95)'; ctx.lineWidth=3;
+      ctx.setLineDash([10,8]);
+      ctx.strokeRect(world.berth.x,world.berth.y,world.berth.w,world.berth.h);
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(255,255,180,0.07)';
+      ctx.fillRect(world.berth.x,world.berth.y,world.berth.w,world.berth.h);
+
+      // DOCK label
+      ctx.fillStyle='#ffee00';
+      ctx.font='bold 11px "Courier New",monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('POMOST',world.berth.x+world.berth.w/2,world.berth.y-12);
+
+      // Spectators on bridge (pixel people)
+      [620,650,680,710,740,770,800].forEach(py=>{
+        ctx.fillStyle='#f4d7c3'; ctx.fillRect(369,py-12,6,6);   // head
+        ctx.fillStyle=['#e06868','#6ea9d9','#7bd389','#ffd166'][Math.floor(py/10)%4];
+        ctx.fillRect(367,py-6,8,10);  // body
+      });
+    }
+
+    function drawHUDGuide() {
+      const targetX = world.berth.x + world.berth.w / 2;
+      const targetY = world.berth.y + world.berth.h / 2;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,.56)';
+      ctx.setLineDash([8,8]);
+      ctx.beginPath();
+      ctx.moveTo(boat.x, boat.y);
+      ctx.lineTo(targetX, targetY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    function drawOar(side, active, backing) {
+      const pivotX = -2;
+      const pivotY = side * 12;
+      const spread = side * 44;
+      const sweep = active ? (backing ? 0.82 : -0.82) : 0.08;
+      ctx.save();
+      ctx.translate(pivotX, pivotY);
+      ctx.rotate(side * sweep);
+      ctx.strokeStyle = '#6f4825';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, spread); ctx.stroke();
+      ctx.fillStyle = active ? '#d19900' : '#f0ede6';
+      const bladeY = spread > 0 ? spread - 16 : spread + 2;
+      ctx.fillRect(-5, bladeY, 10, 14);
+      ctx.restore();
+    }
+
+    function drawBoat() {
+      const oa=boat.oarAnim, L=boat.length, W=10, S=5;
+      if(oa.portActive!==0){oa.portPhase=Math.min(oa.portPhase+0.016*S,1);if(oa.portPhase>=1)oa.portActive=0;}
+      if(oa.starActive!==0){oa.starPhase=Math.min(oa.starPhase+0.016*S,1);if(oa.starPhase>=1)oa.starActive=0;}
+      function sw(ph,ac){return ac===0?0:ac>0?-0.5+ph:0.5-ph;}
+      const ps=sw(oa.portPhase,oa.portActive), ss=sw(oa.starPhase,oa.starActive);
+      ctx.save(); ctx.translate(boat.x,boat.y); ctx.rotate(boat.angle);
+
+      // Pixel oars: 2 pairs, each pair port+star at same x position
+      // pair 0: sx=-L*0.18 (port side=1, star side=-1)
+      // pair 1: sx=+L*0.18 (port side=1, star side=-1)
+      // 8 pairs of oars (16 oars total) — evenly spaced along hull length
+      const oarMounts = [];
+      const oarSpacing = L * 0.8 / 7;
+      for (let i = 0; i < 8; i++) oarMounts.push(-L*0.4 + i * oarSpacing);
+
+      oarMounts.forEach((sx) => {
+        [{side:1, isPort:true}, {side:-1, isPort:false}].forEach(({side, isPort}) => {
+          const sweep = isPort ? ps : ss;
+          const ang   = side * Math.PI/2 + sweep;
+          const iLen  = -W - 2, oLen = W + 44;
+          const ix2   = sx + Math.cos(ang)*iLen, iy2 = Math.sin(ang)*iLen;
+          const ox2   = sx + Math.cos(ang)*oLen, oy2 = Math.sin(ang)*oLen;
+
+          // Shaft
+          ctx.strokeStyle = '#d4c46a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(ix2, iy2); ctx.lineTo(ox2, oy2); ctx.stroke();
+
+          // Blade
+          const bladeCol  = isPort ? '#cc1111' : '#118833';
+          const bladeHigh = isPort ? '#ff5555' : '#44ee88';
+          ctx.save();
+          ctx.translate(ox2, oy2); ctx.rotate(ang);
+          ctx.fillStyle = bladeCol;  ctx.fillRect(-7, -3, 14, 8);
+          ctx.fillStyle = bladeHigh; ctx.fillRect(-5, -2, 10, 4);
+          ctx.restore();
+
+          // Collar
+          ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(ix2, iy2);
+          ctx.lineTo(ix2 + Math.cos(ang)*4, iy2 + Math.sin(ang)*4); ctx.stroke();
+        });
+      });
+
+      // Hull shadow
+      ctx.fillStyle='rgba(0,0,0,0.25)';
+      ctx.fillRect(-L/2+3, -W+3, L, W*2);
+
+      // Main hull (pixel rectangle)
+      // Black hull body
+      ctx.fillStyle='#111111';
+      ctx.fillRect(-L/2, -W, L, W*2);
+      // Orange border outline
+      ctx.strokeStyle='#ff8800';
+      ctx.lineWidth=3;
+      ctx.strokeRect(-L/2, -W, L, W*2);
+      // Orange bow block
+      ctx.fillStyle='#ff8800';
+      ctx.fillRect(L*0.36, -W, L*0.14, W*2);
+      // Orange stern block
+      ctx.fillStyle='#ff8800';
+      ctx.fillRect(-L/2, -W, L*0.1, W*2);
+
+      // Bow tip (pixel triangle via fillRect steps)
+      ctx.fillStyle='#cc2233';
+      ctx.fillRect(L/2-2,-6,6,12);
+      ctx.fillRect(L/2+2,-4,4,8);
+      ctx.fillRect(L/2+4,-2,4,4);
+
+      // Dark outline
+      ctx.strokeStyle='#222'; ctx.lineWidth=2; ctx.lineCap='square';
+      ctx.strokeRect(-L/2,-W,L,W*2);
+
+      // Centre stripe
+      ctx.fillStyle='#d4d0c6'; ctx.fillRect(-L*0.2,-2,L*0.4,4);
+
+      // 4 pixel rowers
+      [-L*0.18,L*0.18].forEach(sx=>{
+        ctx.fillStyle='#cc2233'; ctx.fillRect(sx-5,-W+2,10,W*2-4);
+        ctx.fillStyle='#ffcc88'; ctx.fillRect(sx-3,-W+2,6,6);
+        ctx.fillStyle='#222';    ctx.fillRect(sx-3,-W+2,6,3);
+      });
+
+      // Crash flash
+      if(crashCooldown>0.3){
+        ctx.fillStyle='rgba(255,50,50,0.45)';
+        ctx.fillRect(-L/2,-W,L,W*2);
+      }
+      
+      // ── Coxswain (dark-hair figure at stern with megaphone) ──────────────
+      const coxX = -boat.length/2 + boat.length*0.13; // near stern
+      const coxY = 0;
+      const t2 = performance.now()/1000;
+      const shoutCycle = t2 % 3; // shout every 3s
+      const shouting = shoutCycle < 0.7;
+
+      // Body
+      ctx.fillStyle = '#3a2a1a';
+      ctx.fillRect(coxX-4, coxY-6, 8, 10);
+      // Head
+      ctx.beginPath();
+      ctx.arc(coxX, coxY-9, 4.5, 0, Math.PI*2);
+      ctx.fillStyle = '#f5c8a0';
+      ctx.fill();
+      // Dark hair
+      ctx.beginPath();
+      ctx.arc(coxX, coxY-10.5, 4.5, Math.PI, 0);
+      ctx.fillStyle = '#1a0a00';
+      ctx.fill();
+      ctx.fillRect(coxX-4.5, coxY-12, 9, 3);
+      // Megaphone (arm extended toward bow)
+      ctx.save();
+      ctx.translate(coxX+4, coxY-6);
+      ctx.fillStyle = '#cc3300';
+      ctx.beginPath();
+      ctx.moveTo(0,0); ctx.lineTo(10,-3); ctx.lineTo(10,3); ctx.closePath();
+      ctx.fill();
+      // Megaphone bell
+      ctx.beginPath();
+      ctx.moveTo(10,-3); ctx.lineTo(14,-5); ctx.lineTo(14,5); ctx.lineTo(10,3); ctx.closePath();
+      ctx.fillStyle = '#ff5500';
+      ctx.fill();
+      ctx.restore();
+
+      // Animated sound waves when shouting
+      if (shouting) {
+        const wave = shoutCycle / 0.7;
+        const waveAlpha = (1 - wave) * 0.85;
+        [1, 2, 3].forEach(function(n) {
+          const phase = wave - n * 0.22;
+          if (phase < 0 || phase > 1) return;
+          const r = 6 + phase * 18;
+          const a = (1 - phase) * waveAlpha;
+          ctx.save();
+          ctx.translate(coxX + 14, coxY - 1);
+          ctx.strokeStyle = 'rgba(255,200,50,' + a + ')';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, -Math.PI*0.45, Math.PI*0.45);
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      // Floating shout word from trainer
+      if (shoutAlpha > 0 && shoutWord) {
+        ctx.save();
+        ctx.translate(coxX + 22, coxY - 28 - (1 - shoutAlpha) * 22);
+        ctx.rotate(-boat.angle); // keep text upright in world space
+        const fa = Math.min(1, shoutAlpha * 3);
+        ctx.globalAlpha = fa * shoutAlpha;
+        ctx.font = 'bold 22px "Courier New", monospace';
+        ctx.fillStyle = '#ffe066';
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = 5;
+        ctx.strokeText(shoutWord, 0, 0);
+        ctx.fillText(shoutWord, 0, 0);
+        ctx.restore();
+      }
+ctx.restore();
+    }
+
+    function drawConfetti() {
+      for (const p of confetti) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.spin;
+        p.vy += 0.03;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.72);
+        ctx.restore();
+      }
+      confetti = confetti.filter(p => p.y < canvas.height + 30);
+    }
+
+    function drawNonoZone() {
+      // Canal water strip between buoys (top of map)
+      ctx.save();
+      // Canal area — water already visible via rightBank notch, just add subtle shimmer
+      ctx.fillStyle = 'rgba(30,100,180,0.18)';
+      ctx.fillRect(780, 0, 270, 215);
+      ctx.restore();
+
+      // Dashed barrier line across top of water
+      const y1 = 212;
+      ctx.save();
+      ctx.setLineDash([18, 10]);
+      ctx.strokeStyle = 'rgba(255,40,40,0.55)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(780, y1); ctx.lineTo(1050, y1);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Yellow buoys
+      world.buoys.forEach(function(b) {
+        if (!b.col) return;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+        ctx.fillStyle = b.col;
+        ctx.fill();
+        ctx.strokeStyle = '#cc8800';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        // Stripes
+        ctx.save();
+        ctx.clip();
+        ctx.strokeStyle = '#cc6600';
+        ctx.lineWidth = 3;
+        for(let i=-20; i<20; i+=7) {
+          ctx.beginPath();
+          ctx.moveTo(b.x+i, b.y-b.r);
+          ctx.lineTo(b.x+i+b.r, b.y+b.r);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // NONO ZONE sign
+      const sx = 915, sy = 90;
+      ctx.save();
+      ctx.font = 'bold 28px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Background pill
+      const tw = ctx.measureText('⛔ TU NIE ⛔').width;
+      ctx.fillStyle = 'rgba(180,0,0,0.82)';
+      const rx=12, ph=10, pw=18;
+      const bx=sx-tw/2-pw, by=sy-14-ph, bw=tw+pw*2, bh=28+ph*2;
+      ctx.beginPath();
+      ctx.moveTo(bx+rx,by); ctx.lineTo(bx+bw-rx,by);
+      ctx.arcTo(bx+bw,by,bx+bw,by+rx,rx);
+      ctx.lineTo(bx+bw,by+bh-rx);
+      ctx.arcTo(bx+bw,by+bh,bx+bw-rx,by+bh,rx);
+      ctx.lineTo(bx+rx,by+bh);
+      ctx.arcTo(bx,by+bh,bx,by+bh-rx,rx);
+      ctx.lineTo(bx,by+rx);
+      ctx.arcTo(bx,by,bx+rx,by,rx);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle='#ff6666'; ctx.lineWidth=2; ctx.stroke();
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('⛔ TU NIE ⛔', sx, sy);
+      ctx.restore();
+    }
+
+    function drawParkingGhost() {
+      const bx = 430, by = 670, ba = -Math.PI/2; // target parking spot — close to bridge
+      const L = boat.length, W = 10;
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(ba);
+      ctx.globalAlpha = 0.28;
+      // Hull outline
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,4]);
+      ctx.strokeRect(-L/2, -W, L, W*2);
+      // Arrow pointing bow direction
+      ctx.fillStyle = '#aaddff';
+      ctx.beginPath();
+      ctx.moveTo(L/2+4, 0); ctx.lineTo(L/2-8, -6); ctx.lineTo(L/2-8, 6);
+      ctx.closePath(); ctx.fill();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawWinAnim() {
+      if (!winAnim.active) return;
+      winAnim.t = (performance.now() - winAnim.startTime) / 1000;
+      var allDone = true;
+      winAnim.crew.forEach(function(p) {
+        if (winAnim.t < p.delay) { allDone = false; return; }
+        if (p.done) return;
+        allDone = false;
+        p.phase = Math.min(1, (winAnim.t - p.delay) / 1.8);
+        // Interpolate from boat to bridge target
+        var cx = p.x + (p.tx - p.x) * p.phase;
+        var cy = p.y + (p.ty - p.y) * p.phase;
+        var bob = Math.sin(p.phase * Math.PI * 6) * 3 * (1 - p.phase);
+
+        // Draw walking crew member
+        ctx.save(); ctx.translate(cx, cy + bob);
+        // Body
+        ctx.fillStyle = '#334466'; ctx.fillRect(-4, -12, 8, 11);
+        // Head
+        ctx.beginPath(); ctx.arc(0, -15, 4.5, 0, Math.PI*2);
+        ctx.fillStyle = '#f5c8a0'; ctx.fill();
+        // Hat
+        ctx.fillStyle = p.hatCol;
+        ctx.fillRect(-5, -21, 10, 5);
+        ctx.fillRect(-3, -27, 6, 7);
+        // Legs walking
+        var legSwing = Math.sin(p.phase * Math.PI * 8) * 5;
+        ctx.fillStyle = '#334466';
+        ctx.fillRect(-4 + legSwing, -1, 4, 9);
+        ctx.fillRect(0 - legSwing, -1, 4, 9);
+        ctx.restore();
+
+        if (p.phase >= 1) p.done = true;
+      });
+      if (allDone) winAnim.active = false;
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWater();
+      drawBanks();
+      drawNonoZone();
+      drawFlow();
+      drawBridgeAndDock();
+      drawParkingGhost();
+      drawHUDGuide();
+      drawBoat();
+      drawMines(performance.now());
+      drawConfetti();
+      drawWinAnim();
+
+      if (mineHitState) {
+        const age = performance.now() - mineHitState.startTs;
+        if (age < 2200) {
+          const t = age / 2200;
+          if (age < 350) {
+            ctx.beginPath(); ctx.arc(mineHitState.mx,mineHitState.my,age*0.28,0,Math.PI*2);
+            ctx.strokeStyle='rgba(255,200,50,'+(1-age/350)+')'; ctx.lineWidth=10; ctx.stroke();
+          }
+          const count = Math.floor(t * 70);
+          for (let f=0;f<count;f++) {
+            const fx = t<0.3 ? mineHitState.mx+(Math.random()-.5)*age*0.55 : Math.random()*canvas.width;
+            const fy = t<0.3 ? mineHitState.my+(Math.random()-.5)*age*0.55 : Math.random()*canvas.height;
+            ctx.fillStyle=['#ff4400','#ff8800','#ffcc00','#ff2200'][Math.floor(Math.random()*4)];
+            ctx.fillRect(fx,fy,14+Math.random()*14,14+Math.random()*14);
+          }
+          if (t > 0.25) {
+            const bt=(t-0.25)/0.75;
+            const g=ctx.createRadialGradient(canvas.width/2,canvas.height/2,0,canvas.width/2,canvas.height/2,canvas.width*Math.max(0.05,1-bt*0.95));
+            g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(0.5,'rgba(5,1,0,'+(bt*0.7)+')'); g.addColorStop(1,'rgba(0,0,0,'+bt+')');
+            ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+          }
+          if (t > 0.85) { ctx.fillStyle='rgba(0,0,0,'+((t-0.85)/0.15)+')'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+        }
+      }
+    }
+
+    function loop(ts) {
+      const dt = Math.min((ts - lastTs) / 1000, 0.033);
+      lastTs = ts;
+      if (running) updatePhysics(dt);
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    resetBoat();
+    render();
+    requestAnimationFrame((ts) => { lastTs = ts; loop(ts); });
+  
+    // ── Touch rowing buttons ──────────────────────────────────────────────────
+    (function(){
+      var btnMap = {
+        'btn-w':'w','btn-s':'s','btn-a':'a','btn-d':'d','btn-z':'z','btn-c':'c'
+      };
+      Object.keys(btnMap).forEach(function(id){
+        var btn = document.getElementById(id);
+        var k   = btnMap[id];
+        if(!btn) return;
+        function press(e){
+          e.preventDefault();
+          btn.classList.add('pressed');
+          keys.add(k);
+          if(k in tapped) tapped[k] = false;
+
+        }
+        function release(e){
+          e.preventDefault();
+          btn.classList.remove('pressed');
+          keys.delete(k);
+          if(k in tapped) tapped[k] = false;
+
+        }
+        ['touchstart','mousedown'].forEach(function(ev){ btn.addEventListener(ev, press,   {passive:false}); });
+        ['touchend','touchcancel','mouseup','mouseleave'].forEach(function(ev){ btn.addEventListener(ev, release, {passive:false}); });
+      });
+    })();
+</script>
+  <script>
+  var _lang = 'pl';
+  var _t = {
+    pl:{ pause:'Pauza', resume:'Wznów', reset:'Restart', langBtn:'🇬🇧 EN',
+         speed:'Prędkość łodzi', angle:'Kąt do mostu', dist:'Dystans', flow:'Prąd rzeki',
+         rfLabel:'Prąd rzeki', strongLabel:'Silny prąd', sec_telemetry:'Telemetria', ctrlFwd:'Oba wiosła do przodu', ctrlBack:'Oba wiosła do tyłu', ctrlLeft:'Lewe wiosło naprzód', ctrlRight:'Prawe wiosło naprzód', ctrlZL:'Lewe wiosło wstecz', ctrlCR:'Prawe wiosło wstecz', sec_controls:'Sterowanie', sec_tips:'Wskazówki dokowania', sec_water:'Ustawienia wody', tips1:'W i S to pojedyncze uderzenia – tap, nie trzymaj.', tips2:'Używaj krótkich korekt Z lub C do hamowania i korekty kursu.', dmLabel:'Tryb ciemny', minesLabel:'💣 Miny wodne',
+         btnFL:'L WP', btnFB:'OBA WP', btnFR:'P WP',
+         btnBL:'L TYŁ', btnBB:'OBA TYŁ', btnBR:'P TYŁ' },
+    en:{ pause:'Pause', resume:'Resume', reset:'Restart', langBtn:'🇵🇱 PL',
+         speed:'Boat speed', angle:'Bridge angle', dist:'Distance', flow:'River flow',
+         rfLabel:'River flow', strongLabel:'Strong current', sec_telemetry:'Telemetry', ctrlFwd:'Both oars forward', ctrlBack:'Both oars backward', ctrlLeft:'Left oar forward', ctrlRight:'Right oar forward', ctrlZL:'Left oar back', ctrlCR:'Right oar back', sec_controls:'Controls', sec_tips:'Docking tips', sec_water:'Water settings', tips1:'W and S are single strokes – tap, do not hold.', tips2:'Use short Z or C taps for braking and course correction.', dmLabel:'Dark mode', minesLabel:'💣 Water mines',
+         btnFL:'L FWD', btnFB:'BOTH FWD', btnFR:'R FWD',
+         btnBL:'L BWD', btnBB:'BOTH BWD', btnBR:'R BWD' }
+  };
+  function _applyLang(l) {
+    _lang = l; var t = _t[l];
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var k = el.getAttribute('data-i18n');
+      if (t[k] !== undefined) el.textContent = t[k];
+    });
+    var lb = document.getElementById('langBtn'); if (lb) lb.textContent = t.langBtn;
+    var pb = document.getElementById('pauseBtn');
+    if (pb) { var paused = pb.textContent === _t['pl'].resume || pb.textContent === _t['en'].resume;
+      pb.textContent = paused ? t.resume : t.pause; }
+    var rb = document.getElementById('resetBtn'); if (rb) rb.textContent = t.reset;
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var lb = document.getElementById('langBtn');
+    if (lb) lb.addEventListener('click', function() { _applyLang(_lang === 'pl' ? 'en' : 'pl'); });
+    _applyLang('pl');
+  });
+  </script>
+
+  <div id="iS" style="position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
+    <canvas id="iC" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+    <div style="position:relative;z-index:2;text-align:center;pointer-events:none;">
+      <div id="iT" style="font-family:'Courier New',monospace;font-size:clamp(1.2rem,4vw,3rem);font-weight:900;color:#ff2222;text-shadow:4px 4px 0 #880000;opacity:0;transform:scale(0.5);transition:opacity .5s,transform .5s;">EXTREMELY ACCURATE ROWING SIMULATOR</div>
+      <div style="font-family:'Courier New',monospace;color:#ff6666;font-size:.85rem;margin-top:8px;opacity:0;transition:opacity .5s .5s;" id="iSb">SYMULATOR WIOŚLARSTWA PRECYZYJNEGO<R</div>
+      <div id="bbar" style="display:flex;gap:5px;justify-content:center;margin-top:10px;height:36px;opacity:0;transition:opacity .3s .3s;"></div>
+      <div id="iP" style="font-family:'Courier New',monospace;color:#666;font-size:.75rem;margin-top:1.4rem;opacity:0;transition:opacity .5s 1.1s;">[ NACIŚNIJ DOWOLNY KLAWISZ ]</div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var iS=document.getElementById('iS');
+    var ic=document.getElementById('iC'),ix=ic.getContext('2d');
+    ic.width=window.innerWidth;ic.height=window.innerHeight;
+    var frame=0,boatX=-200,rafId;
+    function loop(){
+      frame++;
+      var T=20,cols=Math.ceil(ic.width/T)+1,rows=Math.ceil(ic.height/T)+1,t=Math.floor(frame/8)%2;
+      for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+        ix.fillStyle=(c+r+t)%2===0?'#0a2a3a':'#0d3348';ix.fillRect(c*T,r*T,T,T);
+      }
+      boatX+=3.2;if(boatX>ic.width+320)boatX=-320;
+      ix.save();ix.translate(boatX,ic.height*.55);ix.rotate(Math.PI);
+
+      // Racing shell: 4 pairs of oars (8 oars total)
+      // Each pair shares the SAME x mount point — port (side=+1) above, star (side=-1) below
+      // ALL oars use the same sw → perfectly symmetric in pairs and across pairs
+      var hullLen=240, hullW=7;
+      var sw=Math.sin(frame*.13)*.48;
+      // 4 mount positions evenly spaced along hull
+      var mounts=[-75,-25,25,75];
+      var shaftIn=-11, shaftOut=48;
+
+      ix.lineCap='round';
+
+      // Draw all oars BEHIND hull
+      // Both oars in each pair sweep in the SAME direction simultaneously.
+      // Port (top): normal. Star (bottom): scale y by -1 so it mirrors below hull
+      // but sweeps in the same left-right direction as port.
+      var ag = Math.PI/2 + sw; // single angle for ALL oars
+      mounts.forEach(function(ox){
+        [1,-1].forEach(function(side){
+          ix.save();
+          ix.translate(ox, 0);
+          ix.scale(1, side); // side=1: normal (top), side=-1: mirror below hull
+          // Shaft
+          ix.strokeStyle='#d4c46a'; ix.lineWidth=3; ix.lineCap='round';
+          ix.beginPath();
+          ix.moveTo(Math.cos(ag)*shaftIn, Math.sin(ag)*shaftIn);
+          ix.lineTo(Math.cos(ag)*shaftOut, Math.sin(ag)*shaftOut);
+          ix.stroke();
+          // Blade
+          ix.save();
+          ix.translate(Math.cos(ag)*shaftOut, Math.sin(ag)*shaftOut);
+          ix.rotate(ag);
+          ix.fillStyle = side>0 ? '#cc1111' : '#118833';
+          ix.fillRect(-5,-2,10,9);
+          ix.fillStyle = side>0 ? '#ff5555' : '#44ee88';
+          ix.fillRect(-3,-1,6,4);
+          ix.restore();
+          // Collar
+          ix.strokeStyle='#ffffff'; ix.lineWidth=3;
+          ix.beginPath();
+          ix.moveTo(Math.cos(ag)*shaftIn, Math.sin(ag)*shaftIn);
+          ix.lineTo(Math.cos(ag)*(shaftIn+3), Math.sin(ag)*(shaftIn+3));
+          ix.stroke();
+          ix.restore();
+        });
+      });
+
+      // Hull — drawn ON TOP of oar shafts near mount
+      ix.fillStyle='#f0ece2';
+      ix.beginPath();
+      ix.moveTo(-hullLen/2,0);
+      ix.lineTo(-hullLen/2,-hullW);ix.lineTo(hullLen/2-14,-hullW);
+      ix.lineTo(hullLen/2,0);
+      ix.lineTo(hullLen/2-14,hullW);ix.lineTo(-hullLen/2,hullW);
+      ix.closePath();ix.fill();
+      // Stern block
+      ix.fillStyle='#cc2233';ix.fillRect(hullLen/2-28,-hullW,28,hullW*2);
+      // Bow tip
+      ix.fillStyle='#c0b8a0';ix.fillRect(-hullLen/2-8,-3,14,6);
+      // Seat marks at each mount
+      ix.fillStyle='rgba(0,0,0,0.15)';
+      mounts.forEach(function(ox){ix.fillRect(ox-3,-hullW,6,hullW*2);});
+      // 8 rowers seated at mount positions
+      var hatCols=['#ff2222','#2255ff','#ffee00','#22cc44','#ff8800','#cc22cc','#00cccc','#ffffff'];
+      var lean = Math.sin(frame*.13)*.18; // lean forward/back with stroke
+      mounts.forEach(function(ox,i){
+        ix.save(); ix.translate(ox, 0);
+        // Body (leaning with stroke)
+        ix.save(); ix.rotate(lean);
+        ix.fillStyle='#334466'; ix.fillRect(-4,-12,8,11); // torso
+        // Head
+        ix.beginPath(); ix.arc(0,-14,4.5,0,Math.PI*2);
+        ix.fillStyle='#f5c8a0'; ix.fill();
+        // Hat
+        ix.fillStyle=hatCols[i%hatCols.length];
+        ix.fillRect(-5,-20,10,5);   // brim
+        ix.fillRect(-3,-26,6,7);    // crown
+        // Arms extended forward
+        ix.strokeStyle='#334466'; ix.lineWidth=2.5; ix.lineCap='round';
+        ix.beginPath(); ix.moveTo(-4,-8); ix.lineTo(-10,-4); ix.stroke();
+        ix.beginPath(); ix.moveTo(4,-8); ix.lineTo(10,-4); ix.stroke();
+        ix.restore();
+        ix.restore();
+      });
+
+      // Trainer: dark long-haired figure at stern (right end), waving jacket, megaphone
+      ix.save(); ix.translate(mounts[mounts.length-1]+28, 0);
+      // Waving jacket (animated)
+      var jw=Math.sin(frame*.18)*.25;
+      ix.save(); ix.rotate(jw);
+      ix.fillStyle='#1a1a1a'; ix.fillRect(-6,-13,12,13); // jacket body
+      // Jacket flap waving
+      ix.save(); ix.translate(6,-6); ix.rotate(Math.sin(frame*.18)*.4);
+      ix.fillStyle='#222222'; ix.fillRect(0,-3,5,10); ix.restore();
+      ix.restore();
+      // Head
+      ix.beginPath(); ix.arc(0,-16,5,0,Math.PI*2);
+      ix.fillStyle='#e8b090'; ix.fill();
+      // Long dark hair
+      ix.fillStyle='#1a0800';
+      ix.fillRect(-5,-22,10,14); // top
+      ix.fillRect(-7,-18,4,12); // left side
+      ix.fillRect(3,-18,4,12);  // right side
+      ix.beginPath(); ix.arc(-5,-10,3,0,Math.PI); ix.fill(); // curl left
+      ix.beginPath(); ix.arc(5,-10,3,0,Math.PI); ix.fill();  // curl right
+      // Megaphone arm
+      ix.strokeStyle='#1a1a1a'; ix.lineWidth=3; ix.lineCap='round';
+      ix.beginPath(); ix.moveTo(-5,-8); ix.lineTo(-14,-4); ix.stroke();
+      // Megaphone
+      ix.fillStyle='#cc3300';
+      ix.beginPath(); ix.moveTo(-14,-4); ix.lineTo(-22,-7); ix.lineTo(-22,-1); ix.closePath(); ix.fill();
+      ix.fillStyle='#ff5500';
+      ix.beginPath(); ix.moveTo(-22,-7); ix.lineTo(-27,-9); ix.lineTo(-27,1); ix.lineTo(-22,-1); ix.closePath(); ix.fill();
+
+      // Shouting word floating above megaphone (cycles every 2.5s)
+      var shoutWords=['RUCHY!','TEMPO!','SZYBCIEJ!','MOCNIEJ!','WIOSŁA!'];
+      var shoutIdx=Math.floor(frame/90)%shoutWords.length;
+      var shoutPhase=(frame%90)/90;
+      var shoutA=shoutPhase<0.7?1:Math.max(0,1-(shoutPhase-0.7)/0.3);
+      if(shoutA>0){
+        ix.save();
+        ix.translate(-27-shoutPhase*12, -12-shoutPhase*18);
+        ix.globalAlpha=shoutA;
+        ix.font='bold 14px "Courier New",monospace';
+        ix.textAlign='center'; ix.textBaseline='middle';
+        ix.strokeStyle='rgba(0,0,0,0.8)'; ix.lineWidth=4;
+        ix.strokeText(shoutWords[shoutIdx],0,0);
+        ix.fillStyle='#ffe066'; ix.fillText(shoutWords[shoutIdx],0,0);
+        ix.globalAlpha=1;
+        ix.restore();
+      }
+      ix.restore();
+
+
+      ix.restore();
+      ix.restore();
+      rafId=requestAnimationFrame(loop);
+    }
+    loop();
+    var bar=document.getElementById('bbar');
+    for(var i=0;i<20;i++){
+      var d=document.createElement('div'),h=12+Math.floor(Math.random()*26);
+      d.style.cssText='width:7px;height:'+h+'px;background:#cc0000;transform:scaleY(0);transform-origin:top;transition:transform '+(.3+Math.random()*.5).toFixed(2)+'s '+(.3+Math.random()*.6).toFixed(2)+'s ease-out;';
+      bar.appendChild(d);
+    }
+    setTimeout(function(){
+      document.getElementById('iT').style.cssText+=';opacity:1;transform:scale(1)';
+      document.getElementById('iSb').style.opacity='1';
+      bar.style.opacity='1';
+      bar.querySelectorAll('div').forEach(function(d){d.style.transform='scaleY(1)';});
+      document.getElementById('iP').style.opacity='1';
+    },150);
+    function dismiss(){
+      iS.style.transition='opacity .5s';iS.style.opacity='0';
+      setTimeout(function(){cancelAnimationFrame(rafId);iS.style.display='none';},520);
+    }
+    setTimeout(dismiss,4200);
+    document.addEventListener('keydown',dismiss,{once:true});
+    iS.addEventListener('click',dismiss,{once:true});
+  })();
+  </script>
+</body>
+</html>
