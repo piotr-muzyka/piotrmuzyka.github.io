@@ -338,20 +338,20 @@
     const world = {
       width: canvas.width, height: canvas.height,
       leftBank: [{x:0,y:840},{x:0,y:570},{x:380,y:560},{x:380,y:840},{x:580,y:840},{x:580,y:560},{x:1280,y:570},{x:1280,y:840}],
-      rightBank: [{x:0,y:0},{x:1280,y:0},{x:1280,y:210},{x:1100,y:200},{x:950,y:190},{x:820,y:240},{x:700,y:280},{x:600,y:270},{x:480,y:230},{x:340,y:205},{x:180,y:195},{x:0,y:210}],
+      rightBank: [{x:0,y:0},{x:780,y:0},{x:780,y:210},{x:950,y:195},{x:1050,y:200},{x:1050,y:0},{x:1280,y:0},{x:1280,y:210},{x:1100,y:200},{x:950,y:190},{x:820,y:240},{x:700,y:280},{x:600,y:270},{x:480,y:230},{x:340,y:205},{x:180,y:195},{x:0,y:210}],
       marina: {x:390,y:580,w:180,h:230},
       dockWalls: [{x:362,y:560,w:20,h:282},{x:578,y:560,w:20,h:282}],
       bridge: {x1:380,y1:560,x2:380,y2:840,angle:-1.5708,thickness:40},
       berth: {x:390,y:580,w:170,h:220},
       hangar: {x:60,y:620,w:140,h:80},
-      buoys: [],
+      buoys: [{x:785,y:215,r:12,col:'#ffe600'},{x:1045,y:210,r:12,col:'#ffe600'}],
       flow: {x:-28,y:0}
     };
     const boat = {
       x: 900, y: 390,
       angle: 3.14159,
       vx: 0, vy: 0, angularVelocity: 0,
-      length: 120, width: 20,
+      length: 200, width: 20,
       oarAnim: {portPhase:0,starPhase:0,portActive:0,starActive:0},
       maxStroke: 65,
       drag: 0.992,
@@ -360,6 +360,7 @@
     };
     const startState = { x: boat.x, y: boat.y, angle: boat.angle };
     let win = false;
+    let winAnim = {active:false, crew:[], t:0};
     let crashCooldown = 0;
     let shoutTimer = 0;
     let shoutWord = '';
@@ -435,7 +436,7 @@
       }
     }
 
-    function handleCollision() {
+    function handleCollision(prevX, prevY) {
       const corners = getBoatCorners();
       let hit = false;
       for (const p of corners) {
@@ -446,12 +447,15 @@
           if (dx * dx + dy * dy < (buoy.r + 8) * (buoy.r + 8)) hit = true;
         }
       }
-      if (hit && crashCooldown <= 0) {
-        boat.vx *= -0.28; boat.vy *= -0.28; boat.angularVelocity *= -0.4;
-        boat.x += Math.cos(boat.angle + Math.PI) * 8;
-        boat.y += Math.sin(boat.angle + Math.PI) * 8;
-        crashCooldown = 0.7;
-        showMessage('Contact', 'You clipped a bank, bridge area, pontoon, or buoy. Reset your angle and approach more slowly.');
+      if (hit) {
+        // Block: restore previous position, kill velocity
+        boat.x = prevX; boat.y = prevY;
+        boat.vx *= -0.15; boat.vy *= -0.15;
+        boat.angularVelocity *= -0.3;
+        if (crashCooldown <= 0) {
+          crashCooldown = 0.7;
+          showMessage('Uwaga!', 'Uderzenie w brzeg lub przeszkodę. Zwolnij i zmień kurs.');
+        }
       }
     }
 
@@ -505,12 +509,14 @@
       boat.vx *= boat.drag;
       boat.vy *= boat.waterDrag;
       boat.angle = wrapAngle(boat.angle + boat.angularVelocity * dt);
+      // Save position before move for blocking collision
+      const prevX = boat.x, prevY = boat.y;
       boat.x += boat.vx * dt;
       boat.y += boat.vy * dt;
       boat.x = clamp(boat.x, 20, world.width - 20);
       boat.y = clamp(boat.y, 20, world.height - 20);
 
-      handleCollision();
+      handleCollision(prevX, prevY);
       checkMineCollision(performance.now());
       if (crashCooldown > 0) crashCooldown -= dt;
       // Trainer shout every 3s
@@ -554,6 +560,17 @@
         successBanner.classList.add('show');
         launchConfetti();
         showMessage('Gratulacje!', 'Można wysiadać. ALE NIE WSZYSCY NARAZ!');
+        // Launch crew disembark animation
+        winAnim.active = true; winAnim.t = 0; winAnim.startTime = performance.now(); winAnim.crew = [];
+        for (var ci=0; ci<8; ci++) {
+          winAnim.crew.push({
+            delay: ci * 0.35,
+            x: boat.x, y: boat.y,
+            tx: 360 + (ci%3)*22, ty: 540 + ci*28, // walk toward bridge
+            phase: 0, done: false,
+            hatCol: ['#ff2222','#2255ff','#ffee00','#22cc44','#ff8800','#cc22cc','#00cccc','#ffffff'][ci]
+          });
+        }
       }
       distanceValue.textContent = `${(dist / 22).toFixed(1)} m`;
       angleValue.textContent = `${Math.round(bridgeDeg)}°`;
@@ -590,13 +607,15 @@
     function drawBanks() {
       // Land fill (flat pixel colour)
       ctx.fillStyle='#5a8c3a';
-      ctx.fillRect(0,0,canvas.width,210);    // north
+      ctx.fillRect(0,0,780,210);             // north-left
+      ctx.fillRect(1050,0,230,210);          // north-right (canal gap 780-1050)
       ctx.fillRect(0,560,380,280);           // south-left
       ctx.fillRect(580,560,700,280);         // south-right
 
       // Darker border strip (1 tile = 8px)
       ctx.fillStyle='#3d6b22';
-      ctx.fillRect(0,202,canvas.width,8);    // north bottom edge
+      ctx.fillRect(0,202,780,8);             // north bottom edge left
+      ctx.fillRect(1050,202,230,8);          // north bottom edge right
       ctx.fillRect(0,560,380,8);             // south-left top
       ctx.fillRect(580,560,700,8);           // south-right top
       ctx.fillRect(374,560,8,264);           // left inlet wall
@@ -605,12 +624,23 @@
       // Dither strip (checkerboard) along water edges
       ctx.fillStyle='#6aaa40';
       for(let x=0;x<canvas.width;x+=16){
-        if(Math.floor(x/16)%2===0){ ctx.fillRect(x,194,8,8); ctx.fillRect(x,552,8,8); }
-        else { ctx.fillRect(x+8,194,8,8); ctx.fillRect(x+8,552,8,8); }
+        const inCanal = (x+8 > 780 && x < 1050);
+        if(Math.floor(x/16)%2===0){ if(!inCanal) ctx.fillRect(x,194,8,8); ctx.fillRect(x,552,8,8); }
+        else { if(!inCanal) ctx.fillRect(x+8,194,8,8); ctx.fillRect(x+8,552,8,8); }
       }
 
       // Pixel trees (3-block sprite: trunk + canopy + top)
-      [[780,150],[840,130],[900,148],[960,115],[1020,105],[1080,118],[640,130],[700,140]].forEach(([tx,ty])=>{
+      [
+        // Top left land (x<780)
+        [60,80],[130,60],[200,90],[280,70],[350,85],[440,65],[520,80],[610,90],[690,70],[750,85],
+        // Top right land (x>1050)  
+        [1080,75],[1140,60],[1200,80],[1260,70],
+        // South left bank
+        [40,700],[100,660],[160,710],[240,680],[310,650],[60,780],[180,760],
+        // South right bank
+        [640,620],[720,660],[800,640],[900,680],[1000,620],[1100,660],[1180,640],[1260,700],
+        [650,730],[780,750],[950,720],[1100,750],[1220,730]
+      ].forEach(([tx,ty])=>{
         ctx.fillStyle='#5a3a1a'; ctx.fillRect(tx-4,ty+24,8,16);   // trunk
         ctx.fillStyle='#2d6e1a'; ctx.fillRect(tx-14,ty+8,28,20);  // lower canopy
         ctx.fillStyle='#3d8a22'; ctx.fillRect(tx-10,ty-2,20,14);  // mid canopy
@@ -618,7 +648,128 @@
         ctx.fillStyle='#6dc23e'; ctx.fillRect(tx-4,ty-14,8,6);    // highlight
       });
 
-      // Pixel buildings south bank
+      
+      // ── Zoo: top-right corner (x:1060-1275, y:10-190) ───────────────────
+      (function(){
+        // Fence posts + rails
+        ctx.fillStyle='#8B6914';
+        for(var fx=1060;fx<=1270;fx+=18){ ctx.fillRect(fx,12,5,30); }   // top rail posts
+        for(var fx=1060;fx<=1270;fx+=18){ ctx.fillRect(fx,155,5,30); }  // bottom rail posts
+        ctx.fillStyle='#a07820';
+        ctx.fillRect(1060,18,215,5); ctx.fillRect(1060,28,215,5);       // top rails
+        ctx.fillRect(1060,158,215,5); ctx.fillRect(1060,168,215,5);     // bottom rails
+        ctx.fillRect(1060,10,5,180); ctx.fillRect(1272,10,5,180);       // side posts
+
+        // === MONKEY (x:1075, y:60) ===
+        var mx=1090,my=75;
+        // Body
+        ctx.fillStyle='#8B5E3C'; ctx.fillRect(mx-7,my,14,16);
+        // Head
+        ctx.beginPath(); ctx.arc(mx,my-6,9,0,Math.PI*2);
+        ctx.fillStyle='#8B5E3C'; ctx.fill();
+        // Face
+        ctx.beginPath(); ctx.arc(mx,my-4,6,0,Math.PI*2);
+        ctx.fillStyle='#c49a6c'; ctx.fill();
+        // Eyes
+        ctx.fillStyle='#000'; ctx.fillRect(mx-4,my-8,3,3); ctx.fillRect(mx+1,my-8,3,3);
+        // Ears
+        ctx.beginPath(); ctx.arc(mx-9,my-6,3,0,Math.PI*2); ctx.fillStyle='#8B5E3C'; ctx.fill();
+        ctx.beginPath(); ctx.arc(mx+9,my-6,3,0,Math.PI*2); ctx.fill();
+        // Tail (curly)
+        ctx.strokeStyle='#8B5E3C'; ctx.lineWidth=3; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(mx+7,my+12); ctx.quadraticCurveTo(mx+22,my+8,mx+18,my-2); ctx.stroke();
+        // Arms
+        ctx.fillStyle='#8B5E3C'; ctx.fillRect(mx-14,my+2,8,5); ctx.fillRect(mx+6,my+2,8,5);
+        // Legs
+        ctx.fillRect(mx-5,my+14,5,10); ctx.fillRect(mx+1,my+14,5,10);
+
+        // === ELEPHANT (x:1160, y:55) ===
+        var ex=1165,ey=65;
+        ctx.fillStyle='#888888';
+        // Body
+        ctx.beginPath(); ctx.ellipse(ex,ey+20,22,18,0,0,Math.PI*2); ctx.fill();
+        // Head
+        ctx.beginPath(); ctx.ellipse(ex+18,ey+8,14,12,0,0,Math.PI*2); ctx.fill();
+        // Trunk
+        ctx.strokeStyle='#888888'; ctx.lineWidth=7; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(ex+28,ey+12); ctx.quadraticCurveTo(ex+38,ey+22,ex+32,ey+32); ctx.stroke();
+        // Ear
+        ctx.beginPath(); ctx.ellipse(ex+10,ey+5,10,13,-0.3,0,Math.PI*2);
+        ctx.fillStyle='#777'; ctx.fill();
+        ctx.beginPath(); ctx.ellipse(ex+10,ey+5,7,9,-0.3,0,Math.PI*2);
+        ctx.fillStyle='#d4a0a0'; ctx.fill();
+        // Legs
+        ctx.fillStyle='#888888';
+        [[ex-14,ey+32],[ex-4,ey+34],[ex+6,ey+34],[ex+14,ey+32]].forEach(function(l){
+          ctx.fillRect(l[0],l[1],9,16);
+        });
+        // Eye
+        ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(ex+24,ey+5,2,0,Math.PI*2); ctx.fill();
+        // Tusk
+        ctx.strokeStyle='#ffffcc'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(ex+30,ey+14); ctx.lineTo(ex+42,ey+20); ctx.stroke();
+
+        // === DINOSAUR (T-Rex style, x:1230, y:50) ===
+        var dx=1245,dy=60;
+        ctx.fillStyle='#3a7a3a';
+        // Tail
+        ctx.beginPath(); ctx.moveTo(dx-20,dy+30); ctx.lineTo(dx,dy+20); ctx.lineTo(dx-5,dy+35); ctx.closePath(); ctx.fill();
+        // Body
+        ctx.beginPath(); ctx.ellipse(dx+5,dy+22,18,14,0.2,0,Math.PI*2); ctx.fill();
+        // Head
+        ctx.beginPath(); ctx.moveTo(dx+16,dy+8); ctx.lineTo(dx+38,dy+4); ctx.lineTo(dx+40,dy+14); ctx.lineTo(dx+16,dy+18); ctx.closePath(); ctx.fill();
+        // Eye
+        ctx.fillStyle='#ffff00'; ctx.beginPath(); ctx.arc(dx+30,dy+9,3,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(dx+30,dy+9,1.5,0,Math.PI*2); ctx.fill();
+        // Teeth
+        ctx.fillStyle='#fff';
+        [dx+22,dx+26,dx+30,dx+34].forEach(function(tx2){ ctx.fillRect(tx2,dy+14,3,4); });
+        // Arms (tiny T-rex arms)
+        ctx.fillStyle='#3a7a3a'; ctx.fillRect(dx+14,dy+14,6,8); ctx.fillRect(dx+20,dy+20,5,6);
+        // Legs
+        ctx.fillRect(dx-2,dy+32,10,16); ctx.fillRect(dx+8,dy+34,10,14);
+        // Spots
+        ctx.fillStyle='#2a5a2a';
+        ctx.beginPath(); ctx.arc(dx+2,dy+18,4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(dx+10,dy+26,3,0,Math.PI*2); ctx.fill();
+      })();
+
+
+        // === POLICE STATION (top-right, above zoo) ===
+        (function(){
+          var px=10, py=5, pw=215, ph=50;
+          // Building body
+          ctx.fillStyle='#4466aa'; ctx.fillRect(px,py,pw,ph);
+          // Roof
+          ctx.fillStyle='#223366';
+          ctx.beginPath(); ctx.moveTo(px-4,py); ctx.lineTo(px+pw/2,py-18); ctx.lineTo(px+pw+4,py); ctx.closePath(); ctx.fill();
+          // Windows
+          ctx.fillStyle='#aaccff';
+          [[px+12,py+10],[px+44,py+10],[px+76,py+10],[px+108,py+10],[px+140,py+10],[px+172,py+10]].forEach(function(w){
+            ctx.fillRect(w[0],w[1],18,14);
+            ctx.strokeStyle='#223366'; ctx.lineWidth=1.5; ctx.strokeRect(w[0],w[1],18,14);
+            ctx.fillStyle='#223366'; ctx.fillRect(w[0]+8,w[1],2,14); ctx.fillRect(w[0],w[1]+6,18,2);
+            ctx.fillStyle='#aaccff';
+          });
+          // Door
+          ctx.fillStyle='#1a2a44'; ctx.fillRect(px+pw/2-10,py+20,20,ph-20);
+          ctx.strokeStyle='#4488ff'; ctx.lineWidth=2; ctx.strokeRect(px+pw/2-10,py+20,20,ph-20);
+          // Sign
+          ctx.fillStyle='#ffffff';
+          ctx.font='bold 9px "Courier New",monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText('POLICJA',px+pw/2,py+8);
+          // Blue light on roof
+          var lt=performance.now()/400;
+          ctx.fillStyle='rgba(0,100,255,'+(0.6+0.4*Math.sin(lt))+')';
+          ctx.beginPath(); ctx.arc(px+pw/2,py-18,5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle='rgba(255,255,255,'+(0.4+0.4*Math.cos(lt))+')';
+          ctx.beginPath(); ctx.arc(px+pw/2,py-18,3,0,Math.PI*2); ctx.fill();
+          // Flag pole
+          ctx.fillStyle='#888'; ctx.fillRect(px+pw-14,py-30,3,30);
+          ctx.fillStyle='#cc0000'; ctx.fillRect(px+pw-11,py-30,16,10);
+          ctx.fillStyle='#ffffff'; ctx.fillRect(px+pw-11,py-24,16,4);
+        })();
+// Pixel buildings south bank
       [[60,590,80,70,'#c8b89a','#a09070'],[150,600,60,55,'#b8a888','#907860'],
        [220,595,90,65,'#d0c0a0','#b09878']].forEach(([x,y,w,h,f,r])=>{
         ctx.fillStyle=f; ctx.fillRect(x,y,w,h);
@@ -745,17 +896,37 @@
       // Pixel oars: 2 pairs, each pair port+star at same x position
       // pair 0: sx=-L*0.18 (port side=1, star side=-1)
       // pair 1: sx=+L*0.18 (port side=1, star side=-1)
-      [[-L*0.18,1],[-L*0.18,-1],[L*0.18,1],[L*0.18,-1]].forEach(([sx,side])=>{
-        const sweep=side>0?ss:ps, ang=side*Math.PI/2+sweep;
-        const x0=sx+Math.cos(ang)*(-14), y0=Math.sin(ang)*(-14);
-        const x1=sx+Math.cos(ang)*42, y1=Math.sin(ang)*42;
-        ctx.strokeStyle='#e8d88a'; ctx.lineWidth=4; ctx.lineCap='square';
-        ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
-        // blade: pixel rectangle
-        ctx.save(); ctx.translate(x1,y1); ctx.rotate(ang);
-        ctx.fillStyle='#2255dd'; ctx.fillRect(-5,0,10,12);
-        ctx.fillStyle='#4477ff'; ctx.fillRect(-3,0,6,5);
-        ctx.restore();
+      // 8 pairs of oars (16 oars total) — evenly spaced along hull length
+      const oarMounts = [];
+      const oarSpacing = L * 0.8 / 7;
+      for (let i = 0; i < 8; i++) oarMounts.push(-L*0.4 + i * oarSpacing);
+
+      oarMounts.forEach((sx) => {
+        [{side:1, isPort:true}, {side:-1, isPort:false}].forEach(({side, isPort}) => {
+          const sweep = isPort ? ps : ss;
+          const ang   = side * Math.PI/2 + sweep;
+          const iLen  = -W - 2, oLen = W + 44;
+          const ix2   = sx + Math.cos(ang)*iLen, iy2 = Math.sin(ang)*iLen;
+          const ox2   = sx + Math.cos(ang)*oLen, oy2 = Math.sin(ang)*oLen;
+
+          // Shaft
+          ctx.strokeStyle = '#d4c46a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(ix2, iy2); ctx.lineTo(ox2, oy2); ctx.stroke();
+
+          // Blade
+          const bladeCol  = isPort ? '#cc1111' : '#118833';
+          const bladeHigh = isPort ? '#ff5555' : '#44ee88';
+          ctx.save();
+          ctx.translate(ox2, oy2); ctx.rotate(ang);
+          ctx.fillStyle = bladeCol;  ctx.fillRect(-7, -3, 14, 8);
+          ctx.fillStyle = bladeHigh; ctx.fillRect(-5, -2, 10, 4);
+          ctx.restore();
+
+          // Collar
+          ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(ix2, iy2);
+          ctx.lineTo(ix2 + Math.cos(ang)*4, iy2 + Math.sin(ang)*4); ctx.stroke();
+        });
       });
 
       // Hull shadow
@@ -763,16 +934,19 @@
       ctx.fillRect(-L/2+3, -W+3, L, W*2);
 
       // Main hull (pixel rectangle)
-      ctx.fillStyle='#f0ece2';
+      // Black hull body
+      ctx.fillStyle='#111111';
       ctx.fillRect(-L/2, -W, L, W*2);
-
-      // Red bow block
-      ctx.fillStyle='#cc2233';
-      ctx.fillRect(L*0.22, -W, L*0.28, W*2);
-
-      // Red stern block
-      ctx.fillStyle='#cc2233';
-      ctx.fillRect(-L/2, -W, L*0.22, W*2);
+      // Orange border outline
+      ctx.strokeStyle='#ff8800';
+      ctx.lineWidth=3;
+      ctx.strokeRect(-L/2, -W, L, W*2);
+      // Orange bow block
+      ctx.fillStyle='#ff8800';
+      ctx.fillRect(L*0.36, -W, L*0.14, W*2);
+      // Orange stern block
+      ctx.fillStyle='#ff8800';
+      ctx.fillRect(-L/2, -W, L*0.1, W*2);
 
       // Bow tip (pixel triangle via fillRect steps)
       ctx.fillStyle='#cc2233';
@@ -858,14 +1032,14 @@
       // Floating shout word from trainer
       if (shoutAlpha > 0 && shoutWord) {
         ctx.save();
-        ctx.translate(coxX + 18, coxY - 18 - (1 - shoutAlpha) * 14);
+        ctx.translate(coxX + 22, coxY - 28 - (1 - shoutAlpha) * 22);
         ctx.rotate(-boat.angle); // keep text upright in world space
         const fa = Math.min(1, shoutAlpha * 3);
         ctx.globalAlpha = fa * shoutAlpha;
-        ctx.font = 'bold 13px "Courier New", monospace';
+        ctx.font = 'bold 22px "Courier New", monospace';
         ctx.fillStyle = '#ffe066';
-        ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = 5;
         ctx.strokeText(shoutWord, 0, 0);
         ctx.fillText(shoutWord, 0, 0);
         ctx.restore();
@@ -889,16 +1063,150 @@ ctx.restore();
       confetti = confetti.filter(p => p.y < canvas.height + 30);
     }
 
+    function drawNonoZone() {
+      // Canal water strip between buoys (top of map)
+      ctx.save();
+      // Canal area — water already visible via rightBank notch, just add subtle shimmer
+      ctx.fillStyle = 'rgba(30,100,180,0.18)';
+      ctx.fillRect(780, 0, 270, 215);
+      ctx.restore();
+
+      // Dashed barrier line across top of water
+      const y1 = 212;
+      ctx.save();
+      ctx.setLineDash([18, 10]);
+      ctx.strokeStyle = 'rgba(255,40,40,0.55)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(780, y1); ctx.lineTo(1050, y1);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Yellow buoys
+      world.buoys.forEach(function(b) {
+        if (!b.col) return;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+        ctx.fillStyle = b.col;
+        ctx.fill();
+        ctx.strokeStyle = '#cc8800';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        // Stripes
+        ctx.save();
+        ctx.clip();
+        ctx.strokeStyle = '#cc6600';
+        ctx.lineWidth = 3;
+        for(let i=-20; i<20; i+=7) {
+          ctx.beginPath();
+          ctx.moveTo(b.x+i, b.y-b.r);
+          ctx.lineTo(b.x+i+b.r, b.y+b.r);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // NONO ZONE sign
+      const sx = 915, sy = 90;
+      ctx.save();
+      ctx.font = 'bold 28px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Background pill
+      const tw = ctx.measureText('⛔ TU NIE ⛔').width;
+      ctx.fillStyle = 'rgba(180,0,0,0.82)';
+      const rx=12, ph=10, pw=18;
+      const bx=sx-tw/2-pw, by=sy-14-ph, bw=tw+pw*2, bh=28+ph*2;
+      ctx.beginPath();
+      ctx.moveTo(bx+rx,by); ctx.lineTo(bx+bw-rx,by);
+      ctx.arcTo(bx+bw,by,bx+bw,by+rx,rx);
+      ctx.lineTo(bx+bw,by+bh-rx);
+      ctx.arcTo(bx+bw,by+bh,bx+bw-rx,by+bh,rx);
+      ctx.lineTo(bx+rx,by+bh);
+      ctx.arcTo(bx,by+bh,bx,by+bh-rx,rx);
+      ctx.lineTo(bx,by+rx);
+      ctx.arcTo(bx,by,bx+rx,by,rx);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle='#ff6666'; ctx.lineWidth=2; ctx.stroke();
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('⛔ TU NIE ⛔', sx, sy);
+      ctx.restore();
+    }
+
+    function drawParkingGhost() {
+      const bx = 430, by = 670, ba = -Math.PI/2; // target parking spot — close to bridge
+      const L = boat.length, W = 10;
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(ba);
+      ctx.globalAlpha = 0.28;
+      // Hull outline
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,4]);
+      ctx.strokeRect(-L/2, -W, L, W*2);
+      // Arrow pointing bow direction
+      ctx.fillStyle = '#aaddff';
+      ctx.beginPath();
+      ctx.moveTo(L/2+4, 0); ctx.lineTo(L/2-8, -6); ctx.lineTo(L/2-8, 6);
+      ctx.closePath(); ctx.fill();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawWinAnim() {
+      if (!winAnim.active) return;
+      winAnim.t = (performance.now() - winAnim.startTime) / 1000;
+      var allDone = true;
+      winAnim.crew.forEach(function(p) {
+        if (winAnim.t < p.delay) { allDone = false; return; }
+        if (p.done) return;
+        allDone = false;
+        p.phase = Math.min(1, (winAnim.t - p.delay) / 1.8);
+        // Interpolate from boat to bridge target
+        var cx = p.x + (p.tx - p.x) * p.phase;
+        var cy = p.y + (p.ty - p.y) * p.phase;
+        var bob = Math.sin(p.phase * Math.PI * 6) * 3 * (1 - p.phase);
+
+        // Draw walking crew member
+        ctx.save(); ctx.translate(cx, cy + bob);
+        // Body
+        ctx.fillStyle = '#334466'; ctx.fillRect(-4, -12, 8, 11);
+        // Head
+        ctx.beginPath(); ctx.arc(0, -15, 4.5, 0, Math.PI*2);
+        ctx.fillStyle = '#f5c8a0'; ctx.fill();
+        // Hat
+        ctx.fillStyle = p.hatCol;
+        ctx.fillRect(-5, -21, 10, 5);
+        ctx.fillRect(-3, -27, 6, 7);
+        // Legs walking
+        var legSwing = Math.sin(p.phase * Math.PI * 8) * 5;
+        ctx.fillStyle = '#334466';
+        ctx.fillRect(-4 + legSwing, -1, 4, 9);
+        ctx.fillRect(0 - legSwing, -1, 4, 9);
+        ctx.restore();
+
+        if (p.phase >= 1) p.done = true;
+      });
+      if (allDone) winAnim.active = false;
+    }
+
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawWater();
       drawBanks();
+      drawNonoZone();
       drawFlow();
       drawBridgeAndDock();
+      drawParkingGhost();
       drawHUDGuide();
       drawBoat();
       drawMines(performance.now());
       drawConfetti();
+      drawWinAnim();
 
       if (mineHitState) {
         const age = performance.now() - mineHitState.startTs;
@@ -1020,17 +1328,143 @@ ctx.restore();
       for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
         ix.fillStyle=(c+r+t)%2===0?'#0a2a3a':'#0d3348';ix.fillRect(c*T,r*T,T,T);
       }
-      boatX+=3.5;if(boatX>ic.width+200)boatX=-200;
-      ix.save();ix.translate(boatX,ic.height*.55);
-      ix.fillStyle='#f0ece2';ix.fillRect(-60,-7,120,14);
-      ix.fillStyle='#cc2233';ix.fillRect(30,-7,30,14);ix.fillRect(-60,-7,22,14);
-      var sw=Math.sin(frame*.12)*.4;
-      [[-30,1],[30,-1]].forEach(function(o){
-        var ag=o[1]*Math.PI/2+sw;
-        ix.strokeStyle='#e8d88a';ix.lineWidth=3;
-        ix.beginPath();ix.moveTo(o[0]+Math.cos(ag)*-12,Math.sin(ag)*-12);
-        ix.lineTo(o[0]+Math.cos(ag)*38,Math.sin(ag)*38);ix.stroke();
+      boatX+=3.2;if(boatX>ic.width+320)boatX=-320;
+      ix.save();ix.translate(boatX,ic.height*.55);ix.rotate(Math.PI);
+
+      // Racing shell: 4 pairs of oars (8 oars total)
+      // Each pair shares the SAME x mount point — port (side=+1) above, star (side=-1) below
+      // ALL oars use the same sw → perfectly symmetric in pairs and across pairs
+      var hullLen=240, hullW=7;
+      var sw=Math.sin(frame*.13)*.48;
+      // 4 mount positions evenly spaced along hull
+      var mounts=[-75,-25,25,75];
+      var shaftIn=-11, shaftOut=48;
+
+      ix.lineCap='round';
+
+      // Draw all oars BEHIND hull
+      // Both oars in each pair sweep in the SAME direction simultaneously.
+      // Port (top): normal. Star (bottom): scale y by -1 so it mirrors below hull
+      // but sweeps in the same left-right direction as port.
+      var ag = Math.PI/2 + sw; // single angle for ALL oars
+      mounts.forEach(function(ox){
+        [1,-1].forEach(function(side){
+          ix.save();
+          ix.translate(ox, 0);
+          ix.scale(1, side); // side=1: normal (top), side=-1: mirror below hull
+          // Shaft
+          ix.strokeStyle='#d4c46a'; ix.lineWidth=3; ix.lineCap='round';
+          ix.beginPath();
+          ix.moveTo(Math.cos(ag)*shaftIn, Math.sin(ag)*shaftIn);
+          ix.lineTo(Math.cos(ag)*shaftOut, Math.sin(ag)*shaftOut);
+          ix.stroke();
+          // Blade
+          ix.save();
+          ix.translate(Math.cos(ag)*shaftOut, Math.sin(ag)*shaftOut);
+          ix.rotate(ag);
+          ix.fillStyle = side>0 ? '#cc1111' : '#118833';
+          ix.fillRect(-5,-2,10,9);
+          ix.fillStyle = side>0 ? '#ff5555' : '#44ee88';
+          ix.fillRect(-3,-1,6,4);
+          ix.restore();
+          // Collar
+          ix.strokeStyle='#ffffff'; ix.lineWidth=3;
+          ix.beginPath();
+          ix.moveTo(Math.cos(ag)*shaftIn, Math.sin(ag)*shaftIn);
+          ix.lineTo(Math.cos(ag)*(shaftIn+3), Math.sin(ag)*(shaftIn+3));
+          ix.stroke();
+          ix.restore();
+        });
       });
+
+      // Hull — drawn ON TOP of oar shafts near mount
+      ix.fillStyle='#f0ece2';
+      ix.beginPath();
+      ix.moveTo(-hullLen/2,0);
+      ix.lineTo(-hullLen/2,-hullW);ix.lineTo(hullLen/2-14,-hullW);
+      ix.lineTo(hullLen/2,0);
+      ix.lineTo(hullLen/2-14,hullW);ix.lineTo(-hullLen/2,hullW);
+      ix.closePath();ix.fill();
+      // Stern block
+      ix.fillStyle='#cc2233';ix.fillRect(hullLen/2-28,-hullW,28,hullW*2);
+      // Bow tip
+      ix.fillStyle='#c0b8a0';ix.fillRect(-hullLen/2-8,-3,14,6);
+      // Seat marks at each mount
+      ix.fillStyle='rgba(0,0,0,0.15)';
+      mounts.forEach(function(ox){ix.fillRect(ox-3,-hullW,6,hullW*2);});
+      // 8 rowers seated at mount positions
+      var hatCols=['#ff2222','#2255ff','#ffee00','#22cc44','#ff8800','#cc22cc','#00cccc','#ffffff'];
+      var lean = Math.sin(frame*.13)*.18; // lean forward/back with stroke
+      mounts.forEach(function(ox,i){
+        ix.save(); ix.translate(ox, 0);
+        // Body (leaning with stroke)
+        ix.save(); ix.rotate(lean);
+        ix.fillStyle='#334466'; ix.fillRect(-4,-12,8,11); // torso
+        // Head
+        ix.beginPath(); ix.arc(0,-14,4.5,0,Math.PI*2);
+        ix.fillStyle='#f5c8a0'; ix.fill();
+        // Hat
+        ix.fillStyle=hatCols[i%hatCols.length];
+        ix.fillRect(-5,-20,10,5);   // brim
+        ix.fillRect(-3,-26,6,7);    // crown
+        // Arms extended forward
+        ix.strokeStyle='#334466'; ix.lineWidth=2.5; ix.lineCap='round';
+        ix.beginPath(); ix.moveTo(-4,-8); ix.lineTo(-10,-4); ix.stroke();
+        ix.beginPath(); ix.moveTo(4,-8); ix.lineTo(10,-4); ix.stroke();
+        ix.restore();
+        ix.restore();
+      });
+
+      // Trainer: dark long-haired figure at stern (right end), waving jacket, megaphone
+      ix.save(); ix.translate(mounts[mounts.length-1]+28, 0);
+      // Waving jacket (animated)
+      var jw=Math.sin(frame*.18)*.25;
+      ix.save(); ix.rotate(jw);
+      ix.fillStyle='#1a1a1a'; ix.fillRect(-6,-13,12,13); // jacket body
+      // Jacket flap waving
+      ix.save(); ix.translate(6,-6); ix.rotate(Math.sin(frame*.18)*.4);
+      ix.fillStyle='#222222'; ix.fillRect(0,-3,5,10); ix.restore();
+      ix.restore();
+      // Head
+      ix.beginPath(); ix.arc(0,-16,5,0,Math.PI*2);
+      ix.fillStyle='#e8b090'; ix.fill();
+      // Long dark hair
+      ix.fillStyle='#1a0800';
+      ix.fillRect(-5,-22,10,14); // top
+      ix.fillRect(-7,-18,4,12); // left side
+      ix.fillRect(3,-18,4,12);  // right side
+      ix.beginPath(); ix.arc(-5,-10,3,0,Math.PI); ix.fill(); // curl left
+      ix.beginPath(); ix.arc(5,-10,3,0,Math.PI); ix.fill();  // curl right
+      // Megaphone arm
+      ix.strokeStyle='#1a1a1a'; ix.lineWidth=3; ix.lineCap='round';
+      ix.beginPath(); ix.moveTo(-5,-8); ix.lineTo(-14,-4); ix.stroke();
+      // Megaphone
+      ix.fillStyle='#cc3300';
+      ix.beginPath(); ix.moveTo(-14,-4); ix.lineTo(-22,-7); ix.lineTo(-22,-1); ix.closePath(); ix.fill();
+      ix.fillStyle='#ff5500';
+      ix.beginPath(); ix.moveTo(-22,-7); ix.lineTo(-27,-9); ix.lineTo(-27,1); ix.lineTo(-22,-1); ix.closePath(); ix.fill();
+
+      // Shouting word floating above megaphone (cycles every 2.5s)
+      var shoutWords=['RUCHY!','TEMPO!','SZYBCIEJ!','MOCNIEJ!','WIOSŁA!'];
+      var shoutIdx=Math.floor(frame/90)%shoutWords.length;
+      var shoutPhase=(frame%90)/90;
+      var shoutA=shoutPhase<0.7?1:Math.max(0,1-(shoutPhase-0.7)/0.3);
+      if(shoutA>0){
+        ix.save();
+        ix.translate(-27-shoutPhase*12, -12-shoutPhase*18);
+        ix.globalAlpha=shoutA;
+        ix.font='bold 14px "Courier New",monospace';
+        ix.textAlign='center'; ix.textBaseline='middle';
+        ix.strokeStyle='rgba(0,0,0,0.8)'; ix.lineWidth=4;
+        ix.strokeText(shoutWords[shoutIdx],0,0);
+        ix.fillStyle='#ffe066'; ix.fillText(shoutWords[shoutIdx],0,0);
+        ix.globalAlpha=1;
+        ix.restore();
+      }
+      ix.restore();
+
+
+      ix.restore();
       ix.restore();
       rafId=requestAnimationFrame(loop);
     }
